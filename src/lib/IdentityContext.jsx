@@ -8,6 +8,7 @@ const IdentityContext = createContext(null)
 
 export function IdentityProvider({ children }) {
   const [uid, setUid] = useState(null)
+  const [isAnonymous, setIsAnonymous] = useState(true)
   const [identity, setIdentityState] = useState(() => {
     const raw = localStorage.getItem(STORAGE_KEY)
     return raw ? JSON.parse(raw) : null
@@ -19,6 +20,7 @@ export function IdentityProvider({ children }) {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUid(user.uid)
+        setIsAnonymous(user.isAnonymous)
         setAuthReady(true)
       } else if (!switchingRef.current) {
         signInAnonymously(auth).catch((err) => {
@@ -37,6 +39,7 @@ export function IdentityProvider({ children }) {
       await signOut(auth)
       const cred = await signInAnonymously(auth)
       setUid(cred.user.uid)
+      setIsAnonymous(true)
     } finally {
       switchingRef.current = false
     }
@@ -50,7 +53,9 @@ export function IdentityProvider({ children }) {
   }
 
   return (
-    <IdentityContext.Provider value={{ uid, authReady, identity, switchIdentity, clearIdentity }}>
+    <IdentityContext.Provider
+      value={{ uid, isAnonymous, authReady, identity, switchIdentity, clearIdentity }}
+    >
       {children}
     </IdentityContext.Provider>
   )

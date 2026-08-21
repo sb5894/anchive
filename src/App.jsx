@@ -8,8 +8,12 @@ import Admin from './pages/Admin'
 import './App.css'
 
 function RequireIdentity({ children }) {
-  const { identity, authReady } = useIdentity()
+  const { identity, authReady, isAnonymous } = useIdentity()
   if (!authReady) return <div className="page center">준비 중...</div>
+  // 관리자 계정(비익명 로그인)으로는 학생 화면에 못 들어가게 막는다.
+  // 안 막으면 관리자 세션에 남아있는 예전 학생 신원으로 글/댓글을 쓸 수 있는데,
+  // 화면엔 학생 이름으로 보이지만 실제 authorUid는 관리자 uid로 저장돼 소유권이 꼬인다.
+  if (!isAnonymous) return <Navigate to="/" replace />
   if (!identity) return <Navigate to="/" replace />
   return children
 }

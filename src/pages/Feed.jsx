@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
-import { subscribeEvents } from '../lib/events'
+import { subscribeEvents, UNCATEGORIZED_ID, UNCATEGORIZED_NAME } from '../lib/events'
 import { subscribeFeed } from '../lib/posts'
 import PostCard from '../components/PostCard'
 
@@ -42,6 +42,12 @@ export default function Feed() {
             {e.name}
           </button>
         ))}
+        <button
+          className={eventId === UNCATEGORIZED_ID ? 'chip active' : 'chip'}
+          onClick={() => setEventId(UNCATEGORIZED_ID)}
+        >
+          {UNCATEGORIZED_NAME}
+        </button>
       </div>
 
       <div className="post-grid">

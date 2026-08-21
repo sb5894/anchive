@@ -9,6 +9,8 @@ export default function Entry() {
   const [roster, setRoster] = useState([])
   const [loading, setLoading] = useState(true)
   const [entering, setEntering] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [enterError, setEnterError] = useState('')
   const [grade, setGrade] = useState('')
   const [klass, setKlass] = useState('')
   const [studentId, setStudentId] = useState('')
@@ -16,6 +18,10 @@ export default function Entry() {
   useEffect(() => {
     loadRoster()
       .then(setRoster)
+      .catch((err) => {
+        console.error(err)
+        setLoadError('명단을 불러오지 못했습니다. 새로고침해 주세요.')
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -42,6 +48,7 @@ export default function Entry() {
     const student = roster.find((r) => r.id === studentId)
     if (!student) return
     setEntering(true)
+    setEnterError('')
     try {
       await switchIdentity({
         grade: student.grade,
@@ -50,12 +57,16 @@ export default function Entry() {
         name: student.name,
       })
       navigate('/feed')
+    } catch (err) {
+      console.error(err)
+      setEnterError('입장하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.')
     } finally {
       setEntering(false)
     }
   }
 
   if (loading) return <div className="page center">명단을 불러오는 중...</div>
+  if (loadError) return <div className="page center error">{loadError}</div>
 
   return (
     <div className="page entry">
@@ -111,6 +122,8 @@ export default function Entry() {
           ))}
         </select>
       </div>
+
+      {enterError && <p className="error">{enterError}</p>}
 
       <button className="primary" disabled={!studentId || entering} onClick={handleEnter}>
         {entering ? '입장하는 중...' : '입장하기'}

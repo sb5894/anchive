@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
-import { subscribeEvents } from '../lib/events'
+import { subscribeEvents, UNCATEGORIZED_ID, UNCATEGORIZED_NAME } from '../lib/events'
 import { createPost } from '../lib/posts'
 
 export default function Upload() {
@@ -55,6 +55,7 @@ export default function Upload() {
                 {ev.name}
               </option>
             ))}
+            <option value={UNCATEGORIZED_ID}>{UNCATEGORIZED_NAME}</option>
           </select>
         </div>
 

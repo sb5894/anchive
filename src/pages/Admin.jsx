@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { adminSignIn, adminSignOut, subscribeAdminAuth, subscribeDeletedPosts, subscribeEditedComments } from '../lib/admin'
+import {
+  adminSignIn,
+  adminSignOut,
+  subscribeAdminAuth,
+  subscribeDeletedPosts,
+  subscribeEditedComments,
+  subscribeEditedPosts,
+} from '../lib/admin'
 
 export default function Admin() {
   const [user, setUser] = useState(undefined)
@@ -7,6 +14,7 @@ export default function Admin() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [deletedPosts, setDeletedPosts] = useState([])
+  const [editedPosts, setEditedPosts] = useState([])
   const [editedComments, setEditedComments] = useState([])
 
   useEffect(() => subscribeAdminAuth(setUser), [])
@@ -15,9 +23,11 @@ export default function Admin() {
     if (!user || user.isAnonymous) return
     const unsub1 = subscribeDeletedPosts(setDeletedPosts)
     const unsub2 = subscribeEditedComments(setEditedComments)
+    const unsub3 = subscribeEditedPosts(setEditedPosts)
     return () => {
       unsub1()
       unsub2()
+      unsub3()
     }
   }, [user])
 
@@ -71,6 +81,27 @@ export default function Admin() {
               {p.authorInfo?.grade}-{p.authorInfo?.class} {p.authorInfo?.name}
             </span>
             <span>{p.caption}</span>
+          </div>
+        ))}
+      </section>
+
+      <section>
+        <h2>수정된 게시물</h2>
+        {editedPosts.length === 0 && <p className="empty">없음</p>}
+        {editedPosts.map((p) => (
+          <div key={p.id} className="log-item">
+            <span>
+              {p.authorInfo?.grade}-{p.authorInfo?.class} {p.authorInfo?.name}
+            </span>
+            <span>현재: {p.caption}</span>
+            <details>
+              <summary>이력 ({p.history?.length || 0})</summary>
+              {p.history?.map((h, i) => (
+                <div key={i} className="history-entry">
+                  {h.caption}
+                </div>
+              ))}
+            </details>
           </div>
         ))}
       </section>

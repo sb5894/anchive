@@ -24,6 +24,9 @@ export function resizeImage(file, maxDimension = MAX_DIMENSION, quality = JPEG_Q
       canvas.width = width
       canvas.height = height
       const ctx = canvas.getContext('2d')
+      // JPEG는 투명도가 없어서, 투명 배경 PNG를 그냥 그리면 검게 나온다. 흰 배경을 먼저 깔아준다.
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, width, height)
       ctx.drawImage(img, 0, 0, width, height)
 
       canvas.toBlob(

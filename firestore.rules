@@ -27,11 +27,15 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.authorUid == request.auth.uid;
       // 본인 게시물만 수정 가능(소프트 삭제 포함), 관리자는 전체 접근.
-      // 단, likeCount만 바꾸는 요청은 본인 글이 아니어도 허용 — 좋아요 누르는 모든 로그인 사용자가
-      // 대상 글의 likeCount 필드를 올려야 하기 때문(다른 필드는 여전히 못 건드림).
+      // 단, likeCount만 정확히 1씩 바꾸는 요청은 본인 글이 아니어도 허용 — 좋아요 누르는 모든
+      // 로그인 사용자가 대상 글의 likeCount 필드를 올려야 하기 때문. ±1로 제한해서
+      // 개발자도구로 임의의 숫자를 넣는 걸 막는다(다른 필드는 여전히 못 건드림).
       allow update: if isAdmin()
         || (isSignedIn() && resource.data.authorUid == request.auth.uid)
-        || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount']));
+        || (isSignedIn()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+            && (request.resource.data.likeCount == resource.data.likeCount + 1
+                || request.resource.data.likeCount == resource.data.likeCount - 1));
       allow delete: if isAdmin();
 
       match /likes/{uid} {

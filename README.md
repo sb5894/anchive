@@ -32,7 +32,28 @@ Firestore Admin 권한이 필요해서 관리 스크립트로 넣는다.
 
 ## 관리자 계정 만들기
 
-Firebase 콘솔 > Authentication > Users > "사용자 추가"에서 이메일/비밀번호로 관리자 계정을 만들면 `/admin` 경로에서 로그인해 삭제/수정 로그를 볼 수 있다.
+Firebase 콘솔 > Authentication > Users > "사용자 추가"에서 이메일/비밀번호로 관리자 계정을 만들면 `/admin` 경로에서 로그인해 삭제/수정된 게시물·댓글 로그를 볼 수 있다.
+
+## 학교 로고로 PWA 아이콘 교체
+
+```bash
+node scripts/generateIcons.mjs
+```
+
+`public/안성초_로고_한글(png).png`를 안드로이드(192/512, 투명배경)·iOS(180, 흰배경 flatten) 아이콘으로 변환해서 `public/`에 생성한다. 로고 파일이 바뀌면 다시 실행하면 됨.
+
+## 규칙/색인 배포 (firebase CLI 로그인 없이)
+
+```bash
+node scripts/deployRules.mjs
+```
+
+서비스 계정 키로 `firestore.rules`/`storage.rules`를 바로 배포한다. 단, **Firestore 복합 색인은 이 방법으로 못 만든다** — 색인이 새로 필요해지면(콘솔 에러에 뜨는 링크) Firebase 콘솔에서 직접 "색인 만들기"를 눌러야 한다.
+
+## 사진·동영상 업로드
+
+- 사진은 클라이언트에서 자동 리사이즈(최대 1600px, JPEG) 후 업로드, 동영상은 원본 그대로(50MB 제한) 업로드된다.
+- 업로드 시 행사 종류를 "미분류"로 선택하면 특정 행사에 안 묶고 올릴 수 있다.
 
 ## 배포
 

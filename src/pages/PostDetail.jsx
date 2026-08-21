@@ -23,39 +23,64 @@ export default function PostDetail() {
   const [editText, setEditText] = useState('')
   const [editingCaption, setEditingCaption] = useState(false)
   const [captionDraft, setCaptionDraft] = useState('')
+  const [actionError, setActionError] = useState('')
 
   useEffect(() => subscribePost(postId, setPost), [postId])
   useEffect(() => subscribeComments(postId, setComments), [postId])
 
   if (!post) return <div className="page center">불러오는 중...</div>
 
+  async function runAction(fn) {
+    try {
+      setActionError('')
+      await fn()
+    } catch (err) {
+      console.error(err)
+      setActionError('처리 중 문제가 발생했습니다. 다시 시도해 주세요.')
+    }
+  }
+
   async function handleAddComment(e) {
     e.preventDefault()
     if (!commentText.trim()) return
-    await addComment({ postId, authorUid: uid, authorInfo: identity, text: commentText.trim() })
-    setCommentText('')
+    await runAction(async () => {
+      await addComment({ postId, authorUid: uid, authorInfo: identity, text: commentText.trim() })
+      setCommentText('')
+    })
   }
 
   async function handleSaveEdit(comment) {
     if (!editText.trim()) return
-    await editComment({ postId, commentId: comment.id, newText: editText.trim(), previousText: comment.text })
-    setEditingId(null)
+    await runAction(async () => {
+      await editComment({ postId, commentId: comment.id, newText: editText.trim(), previousText: comment.text })
+      setEditingId(null)
+    })
   }
 
   async function handleDeleteComment(comment) {
     if (!confirm('댓글을 삭제할까요?')) return
-    await softDeleteComment({ postId, commentId: comment.id, previousText: comment.text })
+    await runAction(() =>
+      softDeleteComment({ postId, commentId: comment.id, previousText: comment.text })
+    )
   }
 
   async function handleDeletePost() {
     if (!confirm('게시물을 삭제할까요?')) return
-    await softDeletePost(postId, post.caption)
-    navigate('/feed')
+    await runAction(async () => {
+      await softDeletePost(postId, post.caption)
+      navigate('/feed')
+    })
   }
 
   async function handleSaveCaption() {
-    await editPost({ postId, newCaption: captionDraft.trim(), previousCaption: post.caption })
-    setEditingCaption(false)
+    await runAction(async () => {
+      await editPost({ postId, newCaption: captionDraft.trim(), previousCaption: post.caption })
+      setEditingCaption(false)
+    })
+  }
+
+  async function handleToggleLike() {
+    await runAction(() => toggleLike(postId, uid))
   }
 
   const isOwnPost = post.authorUid === uid
@@ -76,11 +101,13 @@ export default function PostDetail() {
         )}
       </div>
 
+      {actionError && <p className="error">{actionError}</p>}
+
       <div className="post-meta">
         <span className="author">
           {post.authorInfo?.grade}-{post.authorInfo?.class} {post.authorInfo?.name}
         </span>
-        <button className="like-btn" onClick={() => toggleLike(postId, uid)}>
+        <button className="like-btn" onClick={handleToggleLike}>
           ♥ {post.likeCount || 0}
         </button>
         {isOwnPost && !editingCaption && (
