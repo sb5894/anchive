@@ -8,6 +8,24 @@
   --accent-contrast: #ffffff;
   --danger: #d9534f;
 
+  /* 캠퍼스 지도 일러스트 색상 */
+  --map-sky: #eaf3ff;
+  --map-cloud: #ffffff;
+  --map-building: #f2b880;
+  --map-roof: #d9822b;
+  --map-building-2: #f7d97a;
+  --map-roof-2: #e3a71f;
+  --map-pole: #8a8a8a;
+  --map-flag: #e0574c;
+  --map-play: #cfe8b0;
+  --map-track: #ffffff;
+  --map-tree: #6fa860;
+  --map-outside: #dcdcdc;
+  --map-outside-line: #a9a9a9;
+  --map-outside-text: #6b6b6b;
+  --map-road: #b8b8b8;
+  --map-gate: #4f5fe0;
+
   --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 
   font: 16px/1.5 var(--sans);

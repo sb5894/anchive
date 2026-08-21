@@ -90,6 +90,132 @@ button.primary:disabled {
   color: var(--text-muted);
 }
 
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.toggle-btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.all-chip {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-bottom: 12px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.map-section {
+  margin-bottom: 8px;
+}
+
+.map-help {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+.campus-map-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--map-sky);
+  margin-bottom: 4px;
+}
+
+.campus-map-illustration {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.map-pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.map-pin-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(45deg);
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.map-pin-label {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 6px;
+  max-width: 96px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.map-pin.active .map-pin-dot {
+  background: var(--danger);
+}
+
+.map-pin.active .map-pin-label {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.map-pin:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.current-category {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 4px 0 12px;
+  color: var(--text);
+}
+
 .event-filter {
   display: flex;
   gap: 8px;
