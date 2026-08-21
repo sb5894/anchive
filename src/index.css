@@ -1,19 +1,37 @@
 :root {
-  --text: #3a3a3a;
-  --text-muted: #767676;
-  --bg: #fafafa;
-  --surface: #ffffff;
-  --border: #e3e3e3;
-  --accent: #4f5fe0;
-  --accent-contrast: #ffffff;
-  --danger: #d9534f;
+  /* 잉크/종이 색 — 순수 검정/흰색 대신 따뜻한 톤 */
+  --ink: #4a3a2a;
+  --ink-muted: #8a7659;
+  --paper: #f6ecd8;
+  --paper-warm: #efe0c3;
+  --card: #fffaf0;
+  --cork: #c9a876;
+  --cork-dark: #a8824f;
+  --border: #d9c49a;
+  --border-strong: #b89a68;
 
-  --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  /* 포인트 색 — 가을 손글씨 잉크/도장 느낌 */
+  --accent: #b2543f;
+  --accent-dark: #8f3f2e;
+  --accent-contrast: #fff8ec;
+  --danger: #a83232;
+  --danger-contrast: #fff2ec;
 
-  font: 16px/1.5 var(--sans);
+  /* 마스킹테이프 색(카테고리 구분용, 색+텍스트 병행) */
+  --tape-1: #e2b33c;
+  --tape-2: #7e9c73;
+  --tape-3: #7597a6;
+  --tape-4: #c8785f;
+  --tape-5: #a488b0;
+
+  --font-title: 'Do Hyeon', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --font-hand: 'Gaegu', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --sans: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+
+  font: 16px/1.6 var(--sans);
   color-scheme: light;
-  color: var(--text);
-  background: var(--bg);
+  color: var(--ink);
+  background: var(--paper);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -23,6 +41,17 @@
 
 body {
   margin: 0;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.35), transparent 40%),
+    radial-gradient(circle at 85% 92%, rgba(0, 0, 0, 0.05), transparent 45%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(139, 111, 66, 0.04) 0px,
+      rgba(139, 111, 66, 0.04) 1px,
+      transparent 1px,
+      transparent 26px
+    ),
+    var(--paper);
 }
 
 #root {
@@ -36,4 +65,19 @@ input,
 select,
 textarea {
   font: inherit;
+  color: inherit;
+}
+
+button {
+  min-height: 44px;
+}
+
+a {
+  color: var(--accent-dark);
+}
+
+/* 포커스 표시 — 키보드/스위치 사용자를 위해 색만이 아니라 뚜렷한 윤곽으로 */
+:focus-visible {
+  outline: 3px solid var(--accent-dark);
+  outline-offset: 2px;
 }

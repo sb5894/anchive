@@ -88,7 +88,7 @@ export default function PostDetail() {
   return (
     <div className="page post-detail">
       <Link to="/feed" className="back">
-        ← 목록으로
+        ← 앨범으로 돌아가기
       </Link>
 
       <div className="images">
@@ -108,7 +108,7 @@ export default function PostDetail() {
           {post.authorInfo?.grade}-{post.authorInfo?.class} {post.authorInfo?.name}
         </span>
         <button className="like-btn" onClick={handleToggleLike}>
-          ♥ {post.likeCount || 0}
+          ♥ 좋아요 {post.likeCount || 0}
         </button>
         {isOwnPost && !editingCaption && (
           <>

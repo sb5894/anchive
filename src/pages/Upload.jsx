@@ -44,9 +44,10 @@ export default function Upload() {
 
   return (
     <div className="page upload">
-      <h1>사진·동영상 올리기</h1>
+      <h1>📌 새 페이지 붙이기</h1>
+      <p className="sub">앨범에 사진이나 동영상을 붙여 보세요.</p>
 
-      <form onSubmit={handleSubmit}>
+      <form className="index-card" onSubmit={handleSubmit}>
         <div className="field">
           <label>행사 종류</label>
           <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
@@ -100,7 +101,7 @@ export default function Upload() {
         {error && <p className="error">{error}</p>}
 
         <button className="primary" type="submit" disabled={submitting}>
-          {submitting ? '업로드 중...' : '올리기'}
+          {submitting ? '붙이는 중...' : '📌 앨범에 붙이기'}
         </button>
       </form>
     </div>

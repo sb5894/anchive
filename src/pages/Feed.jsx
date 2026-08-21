@@ -21,17 +21,17 @@ export default function Feed() {
   return (
     <div className="page feed">
       <header className="feed-header">
-        <h1>학교 아카이브</h1>
+        <h1>추억 앨범 게시판</h1>
         {identity && (
           <span className="whoami">
-            {identity.grade}-{identity.class} {identity.name}
+            {identity.grade}학년 {identity.class}반 {identity.name}
           </span>
         )}
       </header>
 
-      <div className="event-filter">
+      <nav className="event-filter" aria-label="앨범 페이지(행사) 고르기">
         <button className={eventId === '' ? 'chip active' : 'chip'} onClick={() => setEventId('')}>
-          전체
+          📖 전체보기
         </button>
         {events.map((e) => (
           <button
@@ -48,17 +48,18 @@ export default function Feed() {
         >
           {UNCATEGORIZED_NAME}
         </button>
-      </div>
+      </nav>
 
       <div className="post-grid">
         {posts.map((p) => (
           <PostCard key={p.id} post={p} />
         ))}
-        {posts.length === 0 && <p className="empty">아직 올라온 사진이 없어요.</p>}
+        {posts.length === 0 && <p className="empty">📌 아직 붙은 사진이 없어요. 첫 사진을 올려 보세요!</p>}
       </div>
 
       <Link to="/upload" className="fab">
-        +
+        <span className="fab-icon" aria-hidden="true">＋</span>
+        사진 올리기
       </Link>
     </div>
   )

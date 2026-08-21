@@ -47,7 +47,7 @@ export default function Admin() {
   if (!user || user.isAnonymous) {
     return (
       <div className="page admin-login">
-        <h1>관리자 로그인</h1>
+        <h1>📋 관리자 로그인</h1>
         <form onSubmit={handleLogin}>
           <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} />
           <input
@@ -68,7 +68,7 @@ export default function Admin() {
   return (
     <div className="page admin">
       <header className="feed-header">
-        <h1>관리자 로그</h1>
+        <h1>📋 관리자 기록장</h1>
         <button onClick={() => adminSignOut()}>로그아웃</button>
       </header>
 
