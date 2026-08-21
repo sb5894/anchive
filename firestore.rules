@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.firebase.sign_in_provider == 'password';
+    }
+
+    // 명단: 누구나 읽기만 가능, 쓰기는 관리자(콘솔/스크립트)만
+    match /roster/{studentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 행사 종류: 누구나 읽기, 쓰기는 관리자만
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.authorUid == request.auth.uid;
+      // 본인 게시물만 수정 가능(소프트 삭제 포함), 관리자는 전체 접근.
+      // 단, likeCount만 바꾸는 요청은 본인 글이 아니어도 허용 — 좋아요 누르는 모든 로그인 사용자가
+      // 대상 글의 likeCount 필드를 올려야 하기 때문(다른 필드는 여전히 못 건드림).
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.authorUid == request.auth.uid)
+        || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount']));
+      allow delete: if isAdmin();
+
+      match /likes/{uid} {
+        allow read: if true;
+        allow write: if isSignedIn() && request.auth.uid == uid;
+      }
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn() && request.resource.data.authorUid == request.auth.uid;
+        allow update: if isAdmin() || (isSignedIn() && resource.data.authorUid == request.auth.uid);
+        allow delete: if isAdmin();
+      }
+    }
+
+    // 관리자 로그 화면의 collectionGroup(comments) 조회용.
+    // 위 posts/{postId}/comments 규칙은 직접 하위 컬렉션 접근에만 적용되고
+    // collectionGroup 쿼리에는 별도로 이 와일드카드 규칙이 있어야 적용됨.
+    match /{path=**}/comments/{commentId} {
+      allow read: if true;
+    }
+  }
+}

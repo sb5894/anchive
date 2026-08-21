@@ -1,0 +1,39 @@
+:root {
+  --text: #3a3a3a;
+  --text-muted: #767676;
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --border: #e3e3e3;
+  --accent: #4f5fe0;
+  --accent-contrast: #ffffff;
+  --danger: #d9534f;
+
+  --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+
+  font: 16px/1.5 var(--sans);
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

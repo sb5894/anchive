@@ -1,0 +1,148 @@
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  increment,
+  onSnapshot,
+  orderBy,
+  query,
+  runTransaction,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore'
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
+import { db, storage } from '../firebase'
+import { resizeImage } from './image'
+
+export async function createPost({ eventId, authorUid, authorInfo, files, caption }) {
+  const postRef = doc(collection(db, 'posts'))
+
+  const imageUrls = []
+  for (const file of files) {
+    const resized = await resizeImage(file)
+    const path = `events/${eventId}/posts/${postRef.id}/${crypto.randomUUID()}.jpg`
+    const storageRef = ref(storage, path)
+    await uploadBytes(storageRef, resized)
+    imageUrls.push(await getDownloadURL(storageRef))
+  }
+
+  await setDoc(postRef, {
+    eventId,
+    authorUid,
+    authorInfo,
+    imageUrls,
+    caption: caption || '',
+    createdAt: serverTimestamp(),
+    likeCount: 0,
+    deleted: false,
+    history: [],
+  })
+
+  return postRef.id
+}
+
+export function subscribeFeed({ eventId }, callback) {
+  const base = collection(db, 'posts')
+  const q = eventId
+    ? query(base, where('eventId', '==', eventId), orderBy('createdAt', 'desc'))
+    : query(base, orderBy('createdAt', 'desc'))
+
+  return onSnapshot(q, (snap) => {
+    callback(
+      snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .filter((p) => !p.deleted)
+    )
+  })
+}
+
+export function subscribePost(postId, callback) {
+  return onSnapshot(doc(db, 'posts', postId), (snap) => {
+    callback(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+  })
+}
+
+// 좋아요 문서 쓰기와 likeCount 증감을 하나의 트랜잭션으로 묶어서, 둘 중 하나만
+// 성공하는 상황(권한 오류·네트워크 끊김 등)에서 카운터가 실제 좋아요 수와 어긋나는 걸 막는다.
+export async function toggleLike(postId, uid) {
+  const likeRef = doc(db, 'posts', postId, 'likes', uid)
+  const postRef = doc(db, 'posts', postId)
+
+  await runTransaction(db, async (tx) => {
+    const existing = await tx.get(likeRef)
+    if (existing.exists()) {
+      tx.delete(likeRef)
+      tx.update(postRef, { likeCount: increment(-1) })
+    } else {
+      tx.set(likeRef, { createdAt: serverTimestamp() })
+      tx.update(postRef, { likeCount: increment(1) })
+    }
+  })
+}
+
+export async function editPost({ postId, newCaption, previousCaption }) {
+  const ref = doc(db, 'posts', postId)
+  const snap = await getDoc(ref)
+  const history = snap.exists() ? snap.data().history || [] : []
+  await updateDoc(ref, {
+    caption: newCaption,
+    editedAt: serverTimestamp(),
+    history: [...history, { caption: previousCaption, editedAtMs: Date.now(), action: 'edit' }],
+  })
+}
+
+export async function softDeletePost(postId, previousCaption) {
+  const ref = doc(db, 'posts', postId)
+  const snap = await getDoc(ref)
+  const history = snap.exists() ? snap.data().history || [] : []
+  await updateDoc(ref, {
+    deleted: true,
+    deletedAt: serverTimestamp(),
+    history: [...history, { caption: previousCaption, editedAtMs: Date.now(), action: 'delete' }],
+  })
+}
+
+export function subscribeComments(postId, callback) {
+  const q = query(collection(db, 'posts', postId, 'comments'), orderBy('createdAt', 'asc'))
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+  })
+}
+
+export async function addComment({ postId, authorUid, authorInfo, text }) {
+  await addDoc(collection(db, 'posts', postId, 'comments'), {
+    authorUid,
+    authorInfo,
+    text,
+    createdAt: serverTimestamp(),
+    editedAt: null,
+    history: [],
+    deleted: false,
+  })
+}
+
+// Firestore는 배열 원소 안에 serverTimestamp()를 허용하지 않아 history 항목은 클라이언트 시각(ms)을 사용한다.
+export async function editComment({ postId, commentId, newText, previousText }) {
+  const ref = doc(db, 'posts', postId, 'comments', commentId)
+  const snap = await getDoc(ref)
+  const history = snap.exists() ? snap.data().history || [] : []
+  await updateDoc(ref, {
+    text: newText,
+    editedAt: serverTimestamp(),
+    history: [...history, { text: previousText, editedAtMs: Date.now() }],
+  })
+}
+
+export async function softDeleteComment({ postId, commentId, previousText }) {
+  const ref = doc(db, 'posts', postId, 'comments', commentId)
+  const snap = await getDoc(ref)
+  const history = snap.exists() ? snap.data().history || [] : []
+  await updateDoc(ref, {
+    deleted: true,
+    deletedAt: serverTimestamp(),
+    history: [...history, { text: previousText, editedAtMs: Date.now() }],
+  })
+}
