@@ -70,8 +70,9 @@ export default function Entry() {
 
   return (
     <div className="page entry">
-      <h1>우리 학교 아카이브</h1>
-      <p className="sub">학년 · 반 · 번호를 선택해서 들어가 주세요.</p>
+      <img className="entry-logo" src="/안성초_로고_한글(png).png" alt="안성초등학교 로고" />
+      <h1>안성초 아카이브</h1>
+      <p className="sub">학년 · 반 · 번호를 선택하면 바로 들어갈 수 있어요. 비밀번호는 없어요.</p>
 
       <div className="field">
         <label>학년</label>

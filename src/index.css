@@ -1,16 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Gothic:wght@400;700;800&display=swap');
+
 :root {
-  --text: #3a3a3a;
-  --text-muted: #767676;
-  --bg: #fafafa;
+  --text: #2b2620;
+  --text-muted: #8a8072;
+  --bg: #faf6ee;
   --surface: #ffffff;
-  --border: #e3e3e3;
-  --accent: #4f5fe0;
+  --surface-alt: #f2ecdd;
+  --border: #e6ddc8;
+  --accent: #2f6f5b;
+  --accent-soft: #e4efe9;
   --accent-contrast: #ffffff;
-  --danger: #d9534f;
+  --warm: #c8712f;
+  --warm-soft: #f7e6d3;
+  --danger: #bd4438;
 
-  --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --sans: 'Nanum Gothic', system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', sans-serif;
+  --serif: 'Gowun Batang', Georgia, serif;
 
-  font: 16px/1.5 var(--sans);
+  font: 16px/1.55 var(--sans);
   color-scheme: light;
   color: var(--text);
   background: var(--bg);
@@ -23,6 +30,7 @@
 
 body {
   margin: 0;
+  background: var(--bg);
 }
 
 #root {
@@ -36,4 +44,13 @@ input,
 select,
 textarea {
   font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--warm-soft);
 }

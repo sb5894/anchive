@@ -1,7 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useIdentity } from './lib/IdentityContext'
+import MainLayout from './components/MainLayout'
 import Entry from './pages/Entry'
+import Timeline from './pages/Timeline'
 import Feed from './pages/Feed'
+import About from './pages/About'
 import Upload from './pages/Upload'
 import PostDetail from './pages/PostDetail'
 import Admin from './pages/Admin'
@@ -23,10 +26,32 @@ function App() {
     <Routes>
       <Route path="/" element={<Entry />} />
       <Route
+        path="/timeline"
+        element={
+          <RequireIdentity>
+            <MainLayout>
+              <Timeline />
+            </MainLayout>
+          </RequireIdentity>
+        }
+      />
+      <Route
         path="/feed"
         element={
           <RequireIdentity>
-            <Feed />
+            <MainLayout>
+              <Feed />
+            </MainLayout>
+          </RequireIdentity>
+        }
+      />
+      <Route
+        path="/about"
+        element={
+          <RequireIdentity>
+            <MainLayout>
+              <About />
+            </MainLayout>
           </RequireIdentity>
         }
       />

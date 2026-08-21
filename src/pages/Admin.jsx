@@ -47,7 +47,9 @@ export default function Admin() {
   if (!user || user.isAnonymous) {
     return (
       <div className="page admin-login">
+        <img className="admin-logo" src="/icon-192.png" alt="" aria-hidden="true" />
         <h1>관리자 로그인</h1>
+        <p className="sub">선생님 계정으로 로그인하면 삭제·수정 기록을 확인할 수 있어요.</p>
         <form onSubmit={handleLogin}>
           <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} />
           <input
