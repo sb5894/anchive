@@ -1,16 +1,27 @@
 :root {
-  --text: #3a3a3a;
-  --text-muted: #767676;
-  --bg: #fafafa;
-  --surface: #ffffff;
-  --border: #e3e3e3;
-  --accent: #4f5fe0;
-  --accent-contrast: #ffffff;
-  --danger: #d9534f;
+  /* 가을 운동장 팔레트 — 크림 종이 + 잔디 초록 + 단풍 주황 */
+  --text: #2f2a22;
+  --text-muted: #857a64;
+  --bg: #f7f2e7;
+  --bg-soft: #efe6d2;
+  --surface: #fffdf7;
+  --surface-alt: #fbf1da;
+  --border: #e4d7b8;
+  --border-strong: #d3c29a;
 
-  --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --accent: #2f6b4f;
+  --accent-dark: #1f4d38;
+  --accent-contrast: #fffdf7;
+  --accent2: #d9772f;
+  --accent2-contrast: #2f2a22;
+  --gold: #c79a3c;
+  --danger: #c0453b;
+  --danger-contrast: #fffdf7;
 
-  font: 16px/1.5 var(--sans);
+  --serif: 'Gowun Batang', 'Noto Serif KR', 'Apple SD Gothic Neo', serif;
+  --sans: 'Gowun Dodum', system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+
+  font: 16px/1.6 var(--sans);
   color-scheme: light;
   color: var(--text);
   background: var(--bg);
@@ -23,6 +34,10 @@
 
 body {
   margin: 0;
+  background:
+    radial-gradient(circle at 6px 6px, rgba(199, 154, 60, 0.16) 1.5px, transparent 1.6px)
+      0 0/24px 24px,
+    var(--bg);
 }
 
 #root {
@@ -36,4 +51,17 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--text);
 }

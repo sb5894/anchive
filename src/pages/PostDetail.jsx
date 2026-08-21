@@ -88,7 +88,7 @@ export default function PostDetail() {
   return (
     <div className="page post-detail">
       <Link to="/feed" className="back">
-        ← 목록으로
+        ← 이야기 길로
       </Link>
 
       <div className="images">

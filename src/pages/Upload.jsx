@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
 import { subscribeEvents, UNCATEGORIZED_ID, UNCATEGORIZED_NAME } from '../lib/events'
 import { createPost } from '../lib/posts'
@@ -43,12 +43,18 @@ export default function Upload() {
   }
 
   return (
-    <div className="page upload">
-      <h1>사진·동영상 올리기</h1>
+    <div className="page upload-page">
+      <Link to="/feed" className="back">
+        ← 이야기 길로
+      </Link>
+      <h1>
+        <span aria-hidden="true">📷</span> 이야기 길에 사진 놓기
+      </h1>
+      <p className="sub">어느 정거장 이야기인지 고르고, 사진이나 동영상을 올려주세요.</p>
 
       <form onSubmit={handleSubmit}>
         <div className="field">
-          <label>행사 종류</label>
+          <label>행사(정거장) 종류</label>
           <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
             {events.map((ev) => (
               <option key={ev.id} value={ev.id}>
@@ -100,7 +106,7 @@ export default function Upload() {
         {error && <p className="error">{error}</p>}
 
         <button className="primary" type="submit" disabled={submitting}>
-          {submitting ? '업로드 중...' : '올리기'}
+          {submitting ? '업로드 중...' : '이야기 길에 올리기'}
         </button>
       </form>
     </div>

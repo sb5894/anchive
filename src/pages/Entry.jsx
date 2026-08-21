@@ -69,10 +69,17 @@ export default function Entry() {
   if (loadError) return <div className="page center error">{loadError}</div>
 
   return (
-    <div className="page entry">
-      <h1>우리 학교 아카이브</h1>
-      <p className="sub">학년 · 반 · 번호를 선택해서 들어가 주세요.</p>
+    <div className="page entry-page">
+      <div className="entry-badge">
+        <img src="/안성초_로고_한글(png).png" alt="안성초등학교 로고" />
+        <div className="entry-badge-text">
+          <span className="est">1902년 개교 · 이야기 길</span>
+          <h1>안성초 이야기 길</h1>
+        </div>
+      </div>
+      <p className="sub">학년 · 반 · 번호를 골라서 우리 학교 이야기 길로 들어가요.</p>
 
+      <div className="entry-fields">
       <div className="field">
         <label>학년</label>
         <select
@@ -126,8 +133,9 @@ export default function Entry() {
       {enterError && <p className="error">{enterError}</p>}
 
       <button className="primary" disabled={!studentId || entering} onClick={handleEnter}>
-        {entering ? '입장하는 중...' : '입장하기'}
+        {entering ? '입장하는 중...' : '이야기 길로 들어가기'}
       </button>
+      </div>
     </div>
   )
 }
