@@ -67,9 +67,13 @@ export default function PostDetail() {
       </Link>
 
       <div className="images">
-        {post.imageUrls?.map((url) => (
-          <img key={url} src={url} alt="" />
-        ))}
+        {post.media?.map((m) =>
+          m.type === 'video' ? (
+            <video key={m.url} src={m.url} controls playsInline />
+          ) : (
+            <img key={m.url} src={m.url} alt="" />
+          )
+        )}
       </div>
 
       <div className="post-meta">

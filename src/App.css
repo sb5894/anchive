@@ -148,7 +148,8 @@ button.primary:disabled {
   overflow: hidden;
 }
 
-.post-card-image img {
+.post-card-image img,
+.post-card-image video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -164,6 +165,23 @@ button.primary:disabled {
   font-size: 11px;
   padding: 2px 6px;
   border-radius: 4px;
+}
+
+.play-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  pointer-events: none;
 }
 
 .post-card-meta {
@@ -255,7 +273,8 @@ button.primary:disabled {
   text-decoration: none;
 }
 
-.images img {
+.images img,
+.images video {
   width: 100%;
   border-radius: 8px;
   margin-bottom: 8px;

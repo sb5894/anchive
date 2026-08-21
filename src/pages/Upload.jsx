@@ -26,7 +26,7 @@ export default function Upload() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!files.length || !eventId) {
-      setError('행사 종류와 사진을 선택해 주세요.')
+      setError('행사 종류와 사진/동영상을 선택해 주세요.')
       return
     }
     setSubmitting(true)
@@ -36,7 +36,7 @@ export default function Upload() {
       navigate(`/post/${postId}`)
     } catch (err) {
       console.error(err)
-      setError('업로드 중 문제가 발생했습니다. 다시 시도해 주세요.')
+      setError(err.message || '업로드 중 문제가 발생했습니다. 다시 시도해 주세요.')
     } finally {
       setSubmitting(false)
     }
@@ -44,7 +44,7 @@ export default function Upload() {
 
   return (
     <div className="page upload">
-      <h1>사진 올리기</h1>
+      <h1>사진·동영상 올리기</h1>
 
       <form onSubmit={handleSubmit}>
         <div className="field">
@@ -59,10 +59,10 @@ export default function Upload() {
         </div>
 
         <div className="field">
-          <label>사진 (여러 장 선택 가능)</label>
+          <label>사진·동영상 (여러 개 선택 가능, 동영상은 50MB까지)</label>
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             multiple
             onChange={(e) => {
               const picked = Array.from(e.target.files)
@@ -74,7 +74,10 @@ export default function Upload() {
             <ul className="file-list">
               {files.map((f, i) => (
                 <li key={`${f.name}-${f.lastModified}-${i}`}>
-                  <span>{f.name}</span>
+                  <span>
+                    {f.type.startsWith('video/') ? '🎬 ' : '🖼️ '}
+                    {f.name}
+                  </span>
                   <button
                     type="button"
                     onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
@@ -85,7 +88,7 @@ export default function Upload() {
               ))}
             </ul>
           )}
-          {files.length > 0 && <p className="hint">{files.length}장 선택됨 — 더 고르려면 다시 눌러주세요</p>}
+          {files.length > 0 && <p className="hint">{files.length}개 선택됨 — 더 고르려면 다시 눌러주세요</p>}
         </div>
 
         <div className="field">

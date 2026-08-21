@@ -17,23 +17,37 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { db, storage } from '../firebase'
 import { resizeImage } from './image'
 
+export const MAX_VIDEO_BYTES = 50 * 1024 * 1024 // storage.rules와 동일한 값으로 유지
+
+function extensionOf(filename) {
+  const match = /\.([a-zA-Z0-9]+)$/.exec(filename)
+  return match ? match[1].toLowerCase() : 'mp4'
+}
+
 export async function createPost({ eventId, authorUid, authorInfo, files, caption }) {
   const postRef = doc(collection(db, 'posts'))
 
-  const imageUrls = []
+  const media = []
   for (const file of files) {
-    const resized = await resizeImage(file)
-    const path = `events/${eventId}/posts/${postRef.id}/${crypto.randomUUID()}.jpg`
+    const isVideo = file.type.startsWith('video/')
+
+    if (isVideo && file.size > MAX_VIDEO_BYTES) {
+      throw new Error(`동영상 "${file.name}"이 50MB를 넘어요. 더 짧은 영상으로 올려주세요.`)
+    }
+
+    const uploadFile = isVideo ? file : await resizeImage(file)
+    const ext = isVideo ? extensionOf(file.name) : 'jpg'
+    const path = `events/${eventId}/posts/${postRef.id}/${crypto.randomUUID()}.${ext}`
     const storageRef = ref(storage, path)
-    await uploadBytes(storageRef, resized)
-    imageUrls.push(await getDownloadURL(storageRef))
+    await uploadBytes(storageRef, uploadFile)
+    media.push({ url: await getDownloadURL(storageRef), type: isVideo ? 'video' : 'image' })
   }
 
   await setDoc(postRef, {
     eventId,
     authorUid,
     authorInfo,
-    imageUrls,
+    media,
     caption: caption || '',
     createdAt: serverTimestamp(),
     likeCount: 0,
