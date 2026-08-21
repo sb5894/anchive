@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useIdentity } from './lib/IdentityContext'
 import Entry from './pages/Entry'
 import Feed from './pages/Feed'
+import CategoryFeed from './pages/CategoryFeed'
 import Upload from './pages/Upload'
 import PostDetail from './pages/PostDetail'
 import Admin from './pages/Admin'
@@ -27,6 +28,14 @@ function App() {
         element={
           <RequireIdentity>
             <Feed />
+          </RequireIdentity>
+        }
+      />
+      <Route
+        path="/feed/category/:eventId"
+        element={
+          <RequireIdentity>
+            <CategoryFeed />
           </RequireIdentity>
         }
       />

@@ -70,11 +70,28 @@ export default function Entry() {
 
   return (
     <div className="page entry">
-      <h1>우리 학교 아카이브</h1>
-      <p className="sub">학년 · 반 · 번호를 선택해서 들어가 주세요.</p>
+      <div className="entry-decor" aria-hidden="true">
+        <span className="deco-bubble deco-bubble-1" />
+        <span className="deco-bubble deco-bubble-2" />
+        <span className="deco-bubble deco-bubble-3" />
+        <span className="deco-leaf deco-leaf-1">🍂</span>
+        <span className="deco-leaf deco-leaf-2">🍁</span>
+      </div>
 
-      <div className="field">
-        <label>학년</label>
+      <div className="entry-card">
+        <img
+          className="entry-logo"
+          src="/안성초_로고_한글(png).png"
+          alt="안성초등학교 로고"
+        />
+        <h1>안성초 학교 아카이브</h1>
+        <p className="sub">개교기념일 사진과 영상을 모아 보는 곳이에요.
+          <br />
+          학년 · 반 · 번호를 골라서 들어가 주세요.
+        </p>
+
+        <div className="field">
+          <label>학년</label>
         <select
           value={grade}
           onChange={(e) => {
@@ -123,11 +140,12 @@ export default function Entry() {
         </select>
       </div>
 
-      {enterError && <p className="error">{enterError}</p>}
+        {enterError && <p className="error">{enterError}</p>}
 
-      <button className="primary" disabled={!studentId || entering} onClick={handleEnter}>
-        {entering ? '입장하는 중...' : '입장하기'}
-      </button>
+        <button className="primary" disabled={!studentId || entering} onClick={handleEnter}>
+          {entering ? '입장하는 중...' : '입장하기'}
+        </button>
+      </div>
     </div>
   )
 }

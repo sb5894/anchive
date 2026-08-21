@@ -1,16 +1,33 @@
 :root {
-  --text: #3a3a3a;
-  --text-muted: #767676;
-  --bg: #fafafa;
-  --surface: #ffffff;
-  --border: #e3e3e3;
-  --accent: #4f5fe0;
-  --accent-contrast: #ffffff;
-  --danger: #d9534f;
+  /* 초가을 하늘 파스텔 팔레트 */
+  --sky-top: #eaf6ff;
+  --sky-mid: #f3f8ee;
+  --sky-bottom: #fff4e8;
 
+  --text: #3d3a34;
+  --text-muted: #8a8378;
+  --bg: var(--sky-top);
+  --surface: #ffffffdd;
+  --surface-solid: #ffffff;
+  --border: #e7ddcd;
+
+  --accent: #f2935c; /* 살구/오렌지 - 초가을 포인트 */
+  --accent-contrast: #ffffff;
+  --accent-soft: #ffe1c9;
+
+  --sky: #7fb8dd; /* 파스텔 하늘색 포인트 */
+  --sky-soft: #dbeffc;
+
+  --leaf: #c8935a; /* 낙엽 모티프용, 아주 절제해서 사용 */
+  --danger: #d1685a;
+
+  --shadow-soft: 0 10px 30px -12px rgba(120, 100, 70, 0.28);
+  --shadow-bubble: 0 6px 18px -6px rgba(90, 110, 130, 0.35);
+
+  --display: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 
-  font: 16px/1.5 var(--sans);
+  font: 16px/1.55 var(--sans);
   color-scheme: light;
   color: var(--text);
   background: var(--bg);
@@ -23,6 +40,12 @@
 
 body {
   margin: 0;
+  background:
+    radial-gradient(1200px 800px at 15% -10%, var(--sky-soft), transparent 60%),
+    radial-gradient(900px 700px at 100% 0%, var(--accent-soft), transparent 55%),
+    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-bottom) 100%);
+  background-attachment: fixed;
+  min-height: 100svh;
 }
 
 #root {
@@ -36,4 +59,26 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+/* 스크롤바를 은은하게 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sky-soft) transparent;
 }
