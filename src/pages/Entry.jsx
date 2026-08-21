@@ -69,65 +69,85 @@ export default function Entry() {
   if (loadError) return <div className="page center error">{loadError}</div>
 
   return (
-    <div className="page entry">
-      <h1>우리 학교 아카이브</h1>
-      <p className="sub">학년 · 반 · 번호를 선택해서 들어가 주세요.</p>
+    <div className="cover">
+      <img
+        className="cover-logo"
+        src="/안성초_로고_한글(png).png"
+        alt="안성초등학교 로고"
+      />
+      <p className="cover-kicker">Since 1902</p>
+      <h1 className="cover-title">안성초 아카이브</h1>
+      <p className="cover-issue">제124회 개교기념일 특별호</p>
 
-      <div className="field">
-        <label>학년</label>
-        <select
-          value={grade}
-          onChange={(e) => {
-            setGrade(e.target.value)
-            setKlass('')
-            setStudentId('')
-          }}
-        >
-          <option value="">선택</option>
-          {grades.map((g) => (
-            <option key={g} value={g}>
-              {g}학년
-            </option>
-          ))}
-        </select>
+      <div className="cover-card">
+        <p className="cover-card-title">지면 입장하기</p>
+        <p className="cover-card-hint">
+          학년 · 반 · 번호를 골라 나만의 지면으로 들어가 주세요. 로그인은 필요 없어요.
+        </p>
+
+        <div className="field">
+          <label htmlFor="grade-select">학년</label>
+          <select
+            id="grade-select"
+            value={grade}
+            onChange={(e) => {
+              setGrade(e.target.value)
+              setKlass('')
+              setStudentId('')
+            }}
+          >
+            <option value="">선택하기</option>
+            {grades.map((g) => (
+              <option key={g} value={g}>
+                {g}학년
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <label htmlFor="class-select">반</label>
+          <select
+            id="class-select"
+            value={klass}
+            disabled={!grade}
+            onChange={(e) => {
+              setKlass(e.target.value)
+              setStudentId('')
+            }}
+          >
+            <option value="">선택하기</option>
+            {classes.map((c) => (
+              <option key={c} value={c}>
+                {c}반
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <label htmlFor="student-select">번호 / 이름</label>
+          <select
+            id="student-select"
+            value={studentId}
+            disabled={!klass}
+            onChange={(e) => setStudentId(e.target.value)}
+          >
+            <option value="">선택하기</option>
+            {students.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.number}번 {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {enterError && <p className="error">{enterError}</p>}
+
+        <button className="primary" disabled={!studentId || entering} onClick={handleEnter}>
+          {entering ? '입장하는 중...' : '지면으로 들어가기 →'}
+        </button>
       </div>
-
-      <div className="field">
-        <label>반</label>
-        <select
-          value={klass}
-          disabled={!grade}
-          onChange={(e) => {
-            setKlass(e.target.value)
-            setStudentId('')
-          }}
-        >
-          <option value="">선택</option>
-          {classes.map((c) => (
-            <option key={c} value={c}>
-              {c}반
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="field">
-        <label>번호 / 이름</label>
-        <select value={studentId} disabled={!klass} onChange={(e) => setStudentId(e.target.value)}>
-          <option value="">선택</option>
-          {students.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.number}번 {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {enterError && <p className="error">{enterError}</p>}
-
-      <button className="primary" disabled={!studentId || entering} onClick={handleEnter}>
-        {entering ? '입장하는 중...' : '입장하기'}
-      </button>
     </div>
   )
 }

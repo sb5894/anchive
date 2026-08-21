@@ -1,16 +1,31 @@
 :root {
-  --text: #3a3a3a;
-  --text-muted: #767676;
-  --bg: #fafafa;
-  --surface: #ffffff;
-  --border: #e3e3e3;
-  --accent: #4f5fe0;
-  --accent-contrast: #ffffff;
-  --danger: #d9534f;
+  /* 잉크/지면 색 — 따뜻한 종이 톤의 매거진 팔레트 */
+  --paper: #f6f1e6;
+  --paper-deep: #efe7d6;
+  --ink: #241f19;
+  --ink-muted: #6f6553;
+  --ink-faint: #9b9077;
+  --surface: #fffdf8;
+  --rule: #ddd0b0;
+  --rule-strong: #241f19;
 
-  --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  /* 가을 학교 축제 느낌의 포인트 컬러 */
+  --accent: #b6431a;
+  --accent-contrast: #fffaf1;
+  --accent-soft: #f1ded0;
+  --evergreen: #33553f;
+  --gold: #a97917;
+  --danger: #b3261e;
 
-  font: 16px/1.5 var(--sans);
+  --text: var(--ink);
+  --text-muted: var(--ink-muted);
+  --bg: var(--paper);
+  --border: var(--rule);
+
+  --serif: 'Noto Serif KR', 'Nanum Myeongjo', 'Apple SD Gothic Neo', serif;
+  --sans: 'Noto Sans KR', system-ui, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+
+  font: 16px/1.6 var(--sans);
   color-scheme: light;
   color: var(--text);
   background: var(--bg);
@@ -23,6 +38,9 @@
 
 body {
   margin: 0;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, var(--paper-deep), transparent 60%),
+    var(--paper);
 }
 
 #root {
@@ -36,4 +54,14 @@ input,
 select,
 textarea {
   font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
 }

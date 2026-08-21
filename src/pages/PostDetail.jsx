@@ -11,6 +11,7 @@ import {
   subscribePost,
   toggleLike,
 } from '../lib/posts'
+import Masthead from '../components/Masthead'
 
 export default function PostDetail() {
   const { postId } = useParams()
@@ -86,10 +87,14 @@ export default function PostDetail() {
   const isOwnPost = post.authorUid === uid
 
   return (
-    <div className="page post-detail">
+    <>
+      <Masthead identity={identity} />
+      <div className="page post-detail">
       <Link to="/feed" className="back">
-        ← 목록으로
+        ← 지면 목록으로
       </Link>
+
+      <p className="article-kicker">우리 학교 이야기</p>
 
       <div className="images">
         {post.media?.map((m) =>
@@ -108,7 +113,7 @@ export default function PostDetail() {
           {post.authorInfo?.grade}-{post.authorInfo?.class} {post.authorInfo?.name}
         </span>
         <button className="like-btn" onClick={handleToggleLike}>
-          ♥ {post.likeCount || 0}
+          ♥ 좋아요 {post.likeCount || 0}
         </button>
         {isOwnPost && !editingCaption && (
           <>
@@ -144,7 +149,7 @@ export default function PostDetail() {
       )}
 
       <section className="comments">
-        <h2>댓글 {comments.filter((c) => !c.deleted).length}</h2>
+        <h2>독자 의견 {comments.filter((c) => !c.deleted).length}</h2>
 
         {comments
           .filter((c) => !c.deleted)
@@ -183,6 +188,7 @@ export default function PostDetail() {
 
         <form className="comment-form" onSubmit={handleAddComment}>
           <input
+            aria-label="댓글 입력"
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             placeholder="댓글을 남겨보세요"
@@ -190,6 +196,7 @@ export default function PostDetail() {
           <button type="submit">등록</button>
         </form>
       </section>
-    </div>
+      </div>
+    </>
   )
 }

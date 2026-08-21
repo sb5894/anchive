@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
 import { subscribeEvents, UNCATEGORIZED_ID, UNCATEGORIZED_NAME } from '../lib/events'
 import { createPost } from '../lib/posts'
+import Masthead from '../components/Masthead'
 
 export default function Upload() {
   const navigate = useNavigate()
@@ -43,13 +44,17 @@ export default function Upload() {
   }
 
   return (
-    <div className="page upload">
+    <>
+      <Masthead identity={identity} />
+      <div className="page upload">
+      <p className="article-kicker">새 기사 쓰기</p>
       <h1>사진·동영상 올리기</h1>
+      <p className="sub">우리 반, 우리 행사의 순간을 지면에 실어보세요.</p>
 
       <form onSubmit={handleSubmit}>
         <div className="field">
-          <label>행사 종류</label>
-          <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
+          <label htmlFor="event-select">행사 종류</label>
+          <select id="event-select" value={eventId} onChange={(e) => setEventId(e.target.value)}>
             {events.map((ev) => (
               <option key={ev.id} value={ev.id}>
                 {ev.name}
@@ -60,8 +65,9 @@ export default function Upload() {
         </div>
 
         <div className="field">
-          <label>사진·동영상 (여러 개 선택 가능, 동영상은 50MB까지)</label>
+          <label htmlFor="file-input">사진·동영상 (여러 개 선택 가능, 동영상은 50MB까지)</label>
           <input
+            id="file-input"
             type="file"
             accept="image/*,video/*"
             multiple
@@ -83,7 +89,7 @@ export default function Upload() {
                     type="button"
                     onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
                   >
-                    ✕
+                    ✕ 삭제
                   </button>
                 </li>
               ))}
@@ -93,16 +99,22 @@ export default function Upload() {
         </div>
 
         <div className="field">
-          <label>설명 (선택)</label>
-          <textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={3} />
+          <label htmlFor="caption-input">설명 (선택)</label>
+          <textarea
+            id="caption-input"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            rows={3}
+          />
         </div>
 
         {error && <p className="error">{error}</p>}
 
         <button className="primary" type="submit" disabled={submitting}>
-          {submitting ? '업로드 중...' : '올리기'}
+          {submitting ? '업로드 중...' : '지면에 싣기 →'}
         </button>
       </form>
-    </div>
+      </div>
+    </>
   )
 }

@@ -7,8 +7,14 @@ export default function PostCard({ post }) {
       <div className="post-card-image">
         {first?.type === 'video' && <video src={first.url} muted playsInline />}
         {first && first.type !== 'video' && <img src={first.url} alt="" loading="lazy" />}
-        {first?.type === 'video' && <span className="play-badge">▶</span>}
-        {post.media?.length > 1 && <span className="album-badge">앨범 {post.media.length}</span>}
+        {first?.type === 'video' && (
+          <span className="play-badge-label">
+            <span aria-hidden="true">▶</span> 동영상
+          </span>
+        )}
+        {post.media?.length > 1 && (
+          <span className="album-badge">사진 {post.media.length}장</span>
+        )}
       </div>
       <div className="post-card-meta">
         <span className="author">
