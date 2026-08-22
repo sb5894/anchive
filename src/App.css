@@ -265,11 +265,15 @@ button.primary:disabled {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 3px solid #fff;
-  padding: 0;
+  border: none;
+  /* 테두리 자리를 padding으로 확보해서 오로라 그라디언트 rim이 비치게 함 */
+  padding: 3px;
   cursor: pointer;
-  background: var(--sky-soft);
-  box-shadow: var(--shadow-bubble);
+  background: var(--aurora-rim);
+  box-shadow:
+    var(--shadow-bubble),
+    inset 0 -8px 14px rgba(255, 255, 255, 0.35),
+    inset 0 6px 10px rgba(255, 255, 255, 0.55);
   animation: float var(--float-duration, 6s) ease-in-out infinite;
   animation-delay: var(--float-delay, 0s);
   transition: transform 0.15s ease;
@@ -296,6 +300,31 @@ button.primary:disabled {
   height: 100%;
   object-fit: cover;
   display: block;
+  /* 사진이 유리 안에 비쳐 보이는 느낌을 주기 위해 살짝 투명하게 */
+  opacity: 0.86;
+}
+
+/* 광택 하이라이트 — 왼쪽 위에서 빛나는 유리 반사 느낌 */
+.bubble-media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.2) 32%, transparent 55%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* 아래쪽은 살짝 그림자를 줘서 방울의 입체감을 살림 */
+.bubble-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 72% 82%, rgba(90, 110, 140, 0.28), transparent 60%);
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: multiply;
 }
 
 .bubble-play {

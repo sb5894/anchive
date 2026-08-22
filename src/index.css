@@ -22,7 +22,17 @@
   --danger: #d1685a;
 
   --shadow-soft: 0 10px 30px -12px rgba(120, 100, 70, 0.28);
-  --shadow-bubble: 0 6px 18px -6px rgba(90, 110, 130, 0.35);
+  --shadow-bubble: 0 8px 22px -8px rgba(90, 110, 130, 0.4);
+
+  /* 비눗방울 테두리용 옅은 오로라 그라디언트 */
+  --aurora-rim: conic-gradient(
+    from 200deg,
+    rgba(255, 214, 235, 0.9),
+    rgba(214, 233, 255, 0.9),
+    rgba(214, 255, 240, 0.85),
+    rgba(255, 236, 214, 0.85),
+    rgba(255, 214, 235, 0.9)
+  );
 
   --display: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
