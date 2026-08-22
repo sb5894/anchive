@@ -262,8 +262,8 @@ span.map-spot-marker {
   background: rgba(255, 255, 255, 0.94);
   border-radius: 6px;
   padding: 2px 6px;
-  max-width: 66px;
-  white-space: normal;
+  max-width: 90px;
+  white-space: nowrap;
   text-align: center;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
