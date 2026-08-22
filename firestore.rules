@@ -23,6 +23,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // 장소(캠퍼스 지도 디자인 전용, events와 별개): 누구나 읽기, 쓰기는 관리자만
+    match /locations/{locationId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /posts/{postId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.authorUid == request.auth.uid;
