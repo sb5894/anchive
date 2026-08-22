@@ -33,8 +33,8 @@ export function computeBubbleLayout(posts, containerWidth) {
     const row = Math.floor(index / cols)
     const seed = post.id || String(index)
 
-    // 방울 지름: 칸의 74~92% 사이. 화면에 크게 보이도록 키우되, 이웃 칸과는 안 겹치게.
-    const sizeRatio = 0.74 + seededRandom(`${seed}-size`) * 0.18
+    // 방울 지름: 칸의 58~94% 사이. 화면에 크게 보이면서도 방울마다 크기 차이가 눈에 띄게.
+    const sizeRatio = 0.58 + seededRandom(`${seed}-size`) * 0.36
     const size = cell * sizeRatio
 
     // 남는 여백 안에서만 흔들어 배치 → 절대 칸 밖(=화면 밖)으로 나가지 않는다.
