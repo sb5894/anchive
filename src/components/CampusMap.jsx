@@ -1,7 +1,10 @@
-// 사용자가 직접 만든 손그림풍 캠퍼스 일러스트(campus-map-2.png)를 배경으로 쓴다.
-// categories 핀은 장소를 고르는 접근 경로이고, onMapClick이 주어지면 지도를 직접 탭해서
-// "정확히 여기서 찍었어요"라고 좌표를 콕 찍는 보조 입력도 지원한다(둘 다 선택 사항).
+import { Link } from 'react-router-dom'
 
+// 사용자가 직접 만든 손그림풍 캠퍼스 일러스트(campus-map-2.png)를 배경으로 쓴다.
+// categories 핀은 장소를 고르는 접근 경로이고, onMapClick이 주어지면(업로드 화면)
+// 지도를 직접 탭해서 "정확히 여기서 찍었어요"라고 좌표를 콕 찍는 보조 입력도 지원한다.
+
+// 핀(라벨)이 표시될 고정 지점
 const LOCATION_POSITIONS = {
   hugwan: { left: 50, top: 13 },
   bongwan: { left: 44, top: 33 },
@@ -19,12 +22,41 @@ const FALLBACK_SLOTS = [
   { left: 30, top: 85 },
 ]
 
-export default function CampusMap({ categories, activeId, onSelect, spot, onMapClick }) {
+// 건물/구역 색 구분 (핀·배지 색). 실제 그림 색감과 최대한 맞춰서 직관적으로.
+const LOCATION_COLORS = {
+  hugwan: '#c0654f',
+  bongwan: '#c0654f',
+  kindergarten: '#e0a53f',
+  singwan: '#5b7a99',
+  playground: '#d9a441',
+  garden: '#6f9c4d',
+  forest: '#4f8c5a',
+  'play-area': '#4a9fb0',
+  bibonghall: '#5b7a99',
+}
+const DEFAULT_PIN_COLOR = '#4f5fe0'
+
+// 핀을 정확히 못 눌러도 건물 영역 아무 데나 눌러서 고를 수 있도록 하는 대략적인 히트 영역
+// (퍼센트 좌표: left, top, width, height). onMapClick(콕 찍기 모드)일 때는 쓰지 않는다.
+const LOCATION_REGIONS = {
+  hugwan: { left: 14, top: 7, width: 71, height: 13 },
+  bongwan: { left: 10, top: 25, width: 67, height: 15 },
+  kindergarten: { left: 77, top: 26, width: 20, height: 14 },
+  singwan: { left: 2, top: 41, width: 24, height: 26 },
+  playground: { left: 27, top: 42, width: 69, height: 33 },
+  garden: { left: 1, top: 67, width: 25, height: 10 },
+  forest: { left: 1, top: 77, width: 25, height: 14 },
+  'play-area': { left: 28, top: 78, width: 40, height: 16 },
+  bibonghall: { left: 69, top: 77, width: 30, height: 18 },
+}
+
+export default function CampusMap({ categories, activeId, onSelect, counts, spots, spot, onMapClick }) {
   let fallbackIndex = 0
+  const allSpots = spots || (spot ? [{ id: 'single', ...spot }] : [])
 
   function handleWrapClick(e) {
     if (!onMapClick) return
-    if (e.target.closest('.map-pin')) return
+    if (e.target.closest('.map-pin') || e.target.closest('.map-region')) return
     const rect = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * 100
     const y = ((e.clientY - rect.top) / rect.height) * 100
@@ -38,29 +70,74 @@ export default function CampusMap({ categories, activeId, onSelect, spot, onMapC
     >
       <img className="campus-map-illustration" src="/campus-map-2.png" alt="" aria-hidden="true" />
 
+      {/* 건물 영역 아무데나 눌러도 그 장소가 선택되게 하는 넓은 히트 영역(콕 찍기 모드에서는 숨김) */}
+      {!onMapClick &&
+        categories.map((cat) => {
+          const region = LOCATION_REGIONS[cat.id]
+          if (!region) return null
+          return (
+            <button
+              key={`region-${cat.id}`}
+              type="button"
+              className="map-region"
+              aria-label={cat.name}
+              style={{
+                left: `${region.left}%`,
+                top: `${region.top}%`,
+                width: `${region.width}%`,
+                height: `${region.height}%`,
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelect(cat.id)
+              }}
+            />
+          )
+        })}
+
       {categories.map((cat) => {
         const slot = LOCATION_POSITIONS[cat.id] || FALLBACK_SLOTS[fallbackIndex++ % FALLBACK_SLOTS.length]
         const isActive = activeId === cat.id
+        const color = LOCATION_COLORS[cat.id] || DEFAULT_PIN_COLOR
+        const count = counts?.[cat.id]
         return (
           <button
             key={cat.id}
             type="button"
             className={isActive ? 'map-pin active' : 'map-pin'}
-            style={{ left: `${slot.left}%`, top: `${slot.top}%` }}
+            style={{ left: `${slot.left}%`, top: `${slot.top}%`, '--pin-color': color }}
             onClick={(e) => {
               e.stopPropagation()
               onSelect(cat.id)
             }}
             aria-pressed={isActive}
           >
-            <span className="map-pin-dot" aria-hidden="true" />
+            <span className="map-pin-dot" aria-hidden="true">
+              {!!count && <span className="map-pin-count">{count}</span>}
+            </span>
             <span className="map-pin-label">{cat.name}</span>
           </button>
         )
       })}
 
-      {spot && (
-        <span className="map-spot-marker" style={{ left: `${spot.x}%`, top: `${spot.y}%` }} aria-hidden="true" />
+      {allSpots.map((s) =>
+        s.id && s.id !== 'single' ? (
+          <Link
+            key={s.id}
+            to={`/post/${s.id}`}
+            className="map-spot-marker"
+            style={{ left: `${s.x}%`, top: `${s.y}%` }}
+            onClick={(e) => e.stopPropagation()}
+            aria-label="이 위치에서 찍은 사진 보기"
+          />
+        ) : (
+          <span
+            key={s.id || `${s.x}-${s.y}`}
+            className="map-spot-marker"
+            style={{ left: `${s.x}%`, top: `${s.y}%` }}
+            aria-hidden="true"
+          />
+        )
       )}
     </div>
   )

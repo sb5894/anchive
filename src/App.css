@@ -174,13 +174,21 @@ button.primary:disabled {
 
 .map-spot-marker {
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: var(--danger);
-  border: 3px solid #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  background: radial-gradient(circle at 35% 30%, #ff8f80, var(--danger));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  padding: 0;
+  display: block;
+}
+
+a.map-spot-marker {
+  cursor: pointer;
+}
+
+span.map-spot-marker {
   pointer-events: none;
 }
 
@@ -193,6 +201,14 @@ button.primary:disabled {
   object-fit: cover;
 }
 
+.map-region {
+  position: absolute;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
 .map-pin {
   position: absolute;
   transform: translate(-50%, -100%);
@@ -200,48 +216,66 @@ button.primary:disabled {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 2px;
+  gap: 3px;
   min-width: 44px;
   min-height: 44px;
   padding: 4px;
   border: none;
   background: none;
   cursor: pointer;
+  z-index: 1;
 }
 
 .map-pin-dot {
-  width: 18px;
-  height: 18px;
+  position: relative;
+  width: 30px;
+  height: 30px;
   border-radius: 50% 50% 50% 0;
   transform: rotate(45deg);
-  background: var(--accent);
-  border: 2px solid #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--pin-color) 60%, #fff), var(--pin-color));
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+}
+
+.map-pin-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  transform: rotate(-45deg);
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .map-pin-label {
   font-size: 11px;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.25;
   color: var(--text);
   background: rgba(255, 255, 255, 0.94);
-  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 2px 6px;
-  max-width: 96px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: 66px;
+  white-space: normal;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .map-pin.active .map-pin-dot {
-  background: var(--danger);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--pin-color), 0 3px 6px rgba(0, 0, 0, 0.35);
+  transform: rotate(45deg) scale(1.12);
 }
 
 .map-pin.active .map-pin-label {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--pin-color);
+  color: #fff;
 }
 
 .map-pin:focus-visible {

@@ -14,6 +14,7 @@ export default function Feed() {
   const [locations, setLocations] = useState([])
   const [locationId, setLocationId] = useState('')
   const [posts, setPosts] = useState([])
+  const [allPosts, setAllPosts] = useState([]) // 핀 숫자 배지 + 지도 위 콕 찍은 위치 표시용(필터와 무관하게 항상 전체)
   const [viewMode, setViewMode] = useState('map') // 'map' | 'list'
 
   useEffect(() => subscribeLocations(setLocations), [])
@@ -22,6 +23,8 @@ export default function Feed() {
     const unsub = subscribeFeedByLocation(locationId || null, setPosts)
     return unsub
   }, [locationId])
+
+  useEffect(() => subscribeFeedByLocation(null, setAllPosts), [])
 
   const categories = useMemo(
     () => [...locations, { id: UNTAGGED_ID, name: UNTAGGED_NAME }],
@@ -38,6 +41,20 @@ export default function Feed() {
     if (locationId === UNTAGGED_ID) return posts.filter((p) => !p.locationId)
     return posts
   }, [posts, locationId])
+
+  const counts = useMemo(() => {
+    const map = {}
+    for (const p of allPosts) {
+      const key = p.locationId || UNTAGGED_ID
+      map[key] = (map[key] || 0) + 1
+    }
+    return map
+  }, [allPosts])
+
+  const mapSpots = useMemo(
+    () => allPosts.filter((p) => p.spot).map((p) => ({ id: p.id, x: p.spot.x, y: p.spot.y })),
+    [allPosts]
+  )
 
   return (
     <div className="page feed">
@@ -78,10 +95,17 @@ export default function Feed() {
       {viewMode === 'map' ? (
         <div className="map-section">
           <p className="map-help">
-            학교 지도 위 핀을 눌러 그 장소에서 있었던 사진을 볼 수 있어요. 핀을 누르기 어렵다면
-            아래 &quot;목록으로 보기&quot;를 이용해 주세요.
+            학교 지도 위 핀(또는 건물 위 아무 곳)을 눌러 그 장소에서 있었던 사진을 볼 수 있어요.
+            작은 점은 학생들이 콕 찍은 정확한 촬영 위치예요. 핀을 누르기 어렵다면 아래
+            &quot;목록으로 보기&quot;를 이용해 주세요.
           </p>
-          <CampusMap categories={locations} activeId={locationId} onSelect={setLocationId} />
+          <CampusMap
+            categories={locations}
+            activeId={locationId}
+            onSelect={setLocationId}
+            counts={counts}
+            spots={mapSpots}
+          />
         </div>
       ) : (
         <div className="event-filter">
@@ -91,7 +115,7 @@ export default function Feed() {
               className={locationId === c.id ? 'chip active' : 'chip'}
               onClick={() => setLocationId(c.id)}
             >
-              {c.name}
+              {c.name} {counts[c.id] ? `(${counts[c.id]})` : ''}
             </button>
           ))}
         </div>
