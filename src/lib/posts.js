@@ -24,7 +24,7 @@ function extensionOf(filename) {
   return match ? match[1].toLowerCase() : 'mp4'
 }
 
-export async function createPost({ eventId, authorUid, authorInfo, files, caption }) {
+export async function createPost({ eventId, locationId, authorUid, authorInfo, files, caption }) {
   const postRef = doc(collection(db, 'posts'))
 
   const media = []
@@ -45,6 +45,9 @@ export async function createPost({ eventId, authorUid, authorInfo, files, captio
 
   await setDoc(postRef, {
     eventId,
+    // 이 디자인(캠퍼스 지도)은 행사 종류 대신 장소로 분류한다. events와 별개 필드라
+    // locationId가 없는 기존 글(다른 시안에서 올린 글)도 그대로 호환된다.
+    locationId: locationId || null,
     authorUid,
     authorInfo,
     media,
@@ -70,6 +73,16 @@ export function subscribeFeed({ eventId }, callback) {
         .map((d) => ({ id: d.id, ...d.data() }))
         .filter((p) => !p.deleted)
     )
+  })
+}
+
+// 장소(locationId) 기준 필터. locationId엔 where절을 안 걸고 정렬만 걸어서
+// 새 복합 색인을 안 만들어도 되게(클라이언트에서 거름 — 게시물 수가 적은 소규모 서비스라 무리 없음).
+export function subscribeFeedByLocation(locationId, callback) {
+  const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'))
+  return onSnapshot(q, (snap) => {
+    const all = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => !p.deleted)
+    callback(locationId ? all.filter((p) => p.locationId === locationId) : all)
   })
 }
 

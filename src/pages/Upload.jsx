@@ -1,23 +1,24 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
-import { subscribeEvents, UNCATEGORIZED_ID, UNCATEGORIZED_NAME } from '../lib/events'
+import { UNCATEGORIZED_ID } from '../lib/events'
+import { subscribeLocations } from '../lib/locations'
 import { createPost } from '../lib/posts'
 
 export default function Upload() {
   const navigate = useNavigate()
   const { uid, identity } = useIdentity()
-  const [events, setEvents] = useState([])
-  const [eventId, setEventId] = useState('')
+  const [locations, setLocations] = useState([])
+  const [locationId, setLocationId] = useState('')
   const [files, setFiles] = useState([])
   const [caption, setCaption] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const unsub = subscribeEvents((list) => {
-      setEvents(list)
-      if (list.length > 0 && !eventId) setEventId(list[0].id)
+    const unsub = subscribeLocations((list) => {
+      setLocations(list)
+      if (list.length > 0 && !locationId) setLocationId(list[0].id)
     })
     return unsub
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -25,14 +26,21 @@ export default function Upload() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!files.length || !eventId) {
-      setError('행사 종류와 사진/동영상을 선택해 주세요.')
+    if (!files.length || !locationId) {
+      setError('장소와 사진/동영상을 선택해 주세요.')
       return
     }
     setSubmitting(true)
     setError('')
     try {
-      const postId = await createPost({ eventId, authorUid: uid, authorInfo: identity, files, caption })
+      const postId = await createPost({
+        eventId: UNCATEGORIZED_ID, // 이 디자인은 행사 종류 대신 장소로 분류하므로 고정값 사용
+        locationId,
+        authorUid: uid,
+        authorInfo: identity,
+        files,
+        caption,
+      })
       navigate(`/post/${postId}`)
     } catch (err) {
       console.error(err)
@@ -48,14 +56,13 @@ export default function Upload() {
 
       <form onSubmit={handleSubmit}>
         <div className="field">
-          <label>행사 종류</label>
-          <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
-            {events.map((ev) => (
-              <option key={ev.id} value={ev.id}>
-                {ev.name}
+          <label>장소</label>
+          <select value={locationId} onChange={(e) => setLocationId(e.target.value)}>
+            {locations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {loc.name}
               </option>
             ))}
-            <option value={UNCATEGORIZED_ID}>{UNCATEGORIZED_NAME}</option>
           </select>
         </div>
 

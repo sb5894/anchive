@@ -1,35 +1,43 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
-import { subscribeEvents, UNCATEGORIZED_ID, UNCATEGORIZED_NAME } from '../lib/events'
-import { subscribeFeed } from '../lib/posts'
+import { subscribeLocations } from '../lib/locations'
+import { subscribeFeedByLocation } from '../lib/posts'
 import PostCard from '../components/PostCard'
 import CampusMap from '../components/CampusMap'
 
+const UNTAGGED_ID = 'untagged'
+const UNTAGGED_NAME = '위치 미지정'
+
 export default function Feed() {
   const { identity } = useIdentity()
-  const [events, setEvents] = useState([])
-  const [eventId, setEventId] = useState('')
+  const [locations, setLocations] = useState([])
+  const [locationId, setLocationId] = useState('')
   const [posts, setPosts] = useState([])
   const [viewMode, setViewMode] = useState('map') // 'map' | 'list'
 
-  useEffect(() => subscribeEvents(setEvents), [])
+  useEffect(() => subscribeLocations(setLocations), [])
 
   useEffect(() => {
-    const unsub = subscribeFeed({ eventId: eventId || null }, setPosts)
+    const unsub = subscribeFeedByLocation(locationId || null, setPosts)
     return unsub
-  }, [eventId])
+  }, [locationId])
 
   const categories = useMemo(
-    () => [...events.map((e) => ({ id: e.id, name: e.name })), { id: UNCATEGORIZED_ID, name: UNCATEGORIZED_NAME }],
-    [events]
+    () => [...locations, { id: UNTAGGED_ID, name: UNTAGGED_NAME }],
+    [locations]
   )
 
   const currentCategoryName = useMemo(() => {
-    if (!eventId) return '전체'
-    if (eventId === UNCATEGORIZED_ID) return UNCATEGORIZED_NAME
-    return events.find((e) => e.id === eventId)?.name || '전체'
-  }, [eventId, events])
+    if (!locationId) return '전체'
+    if (locationId === UNTAGGED_ID) return UNTAGGED_NAME
+    return locations.find((l) => l.id === locationId)?.name || '전체'
+  }, [locationId, locations])
+
+  const visiblePosts = useMemo(() => {
+    if (locationId === UNTAGGED_ID) return posts.filter((p) => !p.locationId)
+    return posts
+  }, [posts, locationId])
 
   return (
     <div className="page feed">
@@ -42,7 +50,7 @@ export default function Feed() {
         )}
       </header>
 
-      <div className="view-toggle" role="group" aria-label="카테고리 찾는 방법 선택">
+      <div className="view-toggle" role="group" aria-label="장소 찾는 방법 선택">
         <button
           type="button"
           className={viewMode === 'map' ? 'toggle-btn active' : 'toggle-btn'}
@@ -61,8 +69,8 @@ export default function Feed() {
 
       <button
         type="button"
-        className={eventId === '' ? 'chip all-chip active' : 'chip all-chip'}
-        onClick={() => setEventId('')}
+        className={locationId === '' ? 'chip all-chip active' : 'chip all-chip'}
+        onClick={() => setLocationId('')}
       >
         전체 사진 보기
       </button>
@@ -70,18 +78,18 @@ export default function Feed() {
       {viewMode === 'map' ? (
         <div className="map-section">
           <p className="map-help">
-            학교 지도 위 핀을 눌러 그 장소에서 있었던 행사 사진을 볼 수 있어요. 핀을 누르기 어렵다면
+            학교 지도 위 핀을 눌러 그 장소에서 있었던 사진을 볼 수 있어요. 핀을 누르기 어렵다면
             아래 &quot;목록으로 보기&quot;를 이용해 주세요.
           </p>
-          <CampusMap categories={categories} activeId={eventId} onSelect={setEventId} />
+          <CampusMap categories={locations} activeId={locationId} onSelect={setLocationId} />
         </div>
       ) : (
         <div className="event-filter">
           {categories.map((c) => (
             <button
               key={c.id}
-              className={eventId === c.id ? 'chip active' : 'chip'}
-              onClick={() => setEventId(c.id)}
+              className={locationId === c.id ? 'chip active' : 'chip'}
+              onClick={() => setLocationId(c.id)}
             >
               {c.name}
             </button>
@@ -89,16 +97,16 @@ export default function Feed() {
         </div>
       )}
 
-      <p className="current-category">지금 보는 사진: {currentCategoryName}</p>
+      <p className="current-category">지금 보는 장소: {currentCategoryName}</p>
 
       <div className="post-grid">
-        {posts.map((p) => (
+        {visiblePosts.map((p) => (
           <PostCard key={p.id} post={p} />
         ))}
-        {posts.length === 0 && (
+        {visiblePosts.length === 0 && (
           <p className="empty">
-            {eventId
-              ? '이 카테고리에는 아직 사진이 없어요. 다른 핀이나 목록을 눌러보세요.'
+            {locationId
+              ? '이 장소에는 아직 사진이 없어요. 다른 핀이나 목록을 눌러보세요.'
               : '아직 올라온 사진이 없어요.'}
           </p>
         )}
