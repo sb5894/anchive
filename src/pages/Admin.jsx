@@ -7,6 +7,7 @@ import {
   subscribeEditedComments,
   subscribeEditedPosts,
 } from '../lib/admin'
+import { createEvent, subscribeEvents } from '../lib/events'
 
 export default function Admin() {
   const [user, setUser] = useState(undefined)
@@ -16,6 +17,11 @@ export default function Admin() {
   const [deletedPosts, setDeletedPosts] = useState([])
   const [editedPosts, setEditedPosts] = useState([])
   const [editedComments, setEditedComments] = useState([])
+  const [events, setEvents] = useState([])
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryDate, setNewCategoryDate] = useState('')
+  const [categorySaving, setCategorySaving] = useState(false)
+  const [categoryError, setCategoryError] = useState('')
 
   useEffect(() => subscribeAdminAuth(setUser), [])
 
@@ -24,12 +30,34 @@ export default function Admin() {
     const unsub1 = subscribeDeletedPosts(setDeletedPosts)
     const unsub2 = subscribeEditedComments(setEditedComments)
     const unsub3 = subscribeEditedPosts(setEditedPosts)
+    const unsub4 = subscribeEvents(setEvents)
     return () => {
       unsub1()
       unsub2()
       unsub3()
+      unsub4()
     }
   }, [user])
+
+  async function handleAddCategory(e) {
+    e.preventDefault()
+    if (!newCategoryName.trim() || !newCategoryDate) {
+      setCategoryError('카테고리 이름과 날짜를 입력해 주세요.')
+      return
+    }
+    setCategorySaving(true)
+    setCategoryError('')
+    try {
+      await createEvent({ name: newCategoryName.trim(), date: newCategoryDate })
+      setNewCategoryName('')
+      setNewCategoryDate('')
+    } catch (err) {
+      console.error(err)
+      setCategoryError('카테고리 추가에 실패했습니다.')
+    } finally {
+      setCategorySaving(false)
+    }
+  }
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -73,6 +101,30 @@ export default function Admin() {
         <h1>관리자 로그</h1>
         <button onClick={() => adminSignOut()}>로그아웃</button>
       </header>
+
+      <section>
+        <h2>행사 카테고리</h2>
+        <form className="admin-add-category" onSubmit={handleAddCategory}>
+          <input
+            type="text"
+            placeholder="카테고리 이름 (예: 운동회)"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+          />
+          <input type="date" value={newCategoryDate} onChange={(e) => setNewCategoryDate(e.target.value)} />
+          <button type="submit" disabled={categorySaving}>
+            {categorySaving ? '추가하는 중...' : '+ 카테고리 추가'}
+          </button>
+        </form>
+        {categoryError && <p className="error">{categoryError}</p>}
+        <div className="category-chip-list">
+          {events.map((ev) => (
+            <span key={ev.id} className="chip">
+              {ev.name}
+            </span>
+          ))}
+        </div>
+      </section>
 
       <section>
         <h2>삭제된 게시물</h2>
