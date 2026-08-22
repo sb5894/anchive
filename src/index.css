@@ -8,38 +8,52 @@
   --accent-contrast: #ffffff;
   --danger: #d9534f;
 
-  /* 캠퍼스 지도 일러스트 색상 */
+  /* 캠퍼스 지도 일러스트 색상 (실제 배치도 기준: 후관/본관+유치원/신관/비봉관 + 운동장/놀이터/텃밭/학교숲) */
   --map-sky-top: #dcebff;
   --map-sky: #f3f8ff;
   --map-ground: #e6ecd8;
   --map-ground-shadow: #4a5a3a;
   --map-sun: #ffd873;
   --map-cloud: #ffffff;
-  --map-building-light: #ffcf9e;
-  --map-building: #f2b880;
-  --map-roof: #d9822b;
-  --map-building-2-light: #ffe89c;
-  --map-building-2: #f7d97a;
-  --map-roof-2: #e3a71f;
   --map-window: #fff6e3;
-  --map-library: #cdeee0;
-  --map-library-roof: #6ec8a4;
-  --map-cafeteria: #ffd3d0;
-  --map-cafeteria-roof: #f0897f;
-  --map-pole: #8a8a8a;
-  --map-flag: #e0574c;
-  --map-play-light: #e3f5c9;
-  --map-play: #cfe8b0;
+
+  --map-hugwan-light: #b9d8f5;
+  --map-hugwan: #8bb8e8;
+  --map-hugwan-roof: #5d8fc9;
+
+  --map-bongwan-light: #ffcf9e;
+  --map-bongwan: #f2b880;
+  --map-bongwan-roof: #d9822b;
+
+  --map-kinder: #ffd6e8;
+  --map-kinder-roof: #f0a8c8;
+  --map-kinder-deco: #ff8fb3;
+
+  --map-singwan-light: #d8c8f0;
+  --map-singwan: #b79bde;
+  --map-singwan-roof: #8f6bc4;
+
+  --map-bibong-light: #c9e8d8;
+  --map-bibong: #8fcdae;
+  --map-bibong-roof: #5fa985;
+
+  --map-corridor: #e8dfc8;
+  --map-corridor-line: #b8a978;
+
+  --map-play-light: #ffe9c2;
+  --map-play: #ffdca0;
   --map-track: #ffffff;
+
+  --map-garden: #d7ecb0;
+  --map-garden-deco: #7fae4a;
+
+  --map-forest-bg: #c3e4c8;
   --map-tree-light: #a8d492;
   --map-tree: #6fa860;
   --map-tree-trunk: #8a6a4a;
-  --map-outside: #dcdcdc;
-  --map-outside-line: #a9a9a9;
-  --map-outside-text: #6b6b6b;
-  --map-road: #b8b8b8;
-  --map-gate: #4f5fe0;
-  --map-gate-text: #4f5fe0;
+
+  --map-play-area: #bfe9f0;
+  --map-play-area-deco: #4a9fb0;
 
   --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 

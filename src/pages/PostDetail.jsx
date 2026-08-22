@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
+import CampusMap from '../components/CampusMap'
 import {
   addComment,
   editComment,
@@ -141,6 +142,13 @@ export default function PostDetail() {
             {post.editedAt && <span className="edited-tag"> (수정됨)</span>}
           </p>
         )
+      )}
+
+      {post.spot && (
+        <div className="spot-preview">
+          <p className="hint">📍 이 사진을 찍은 정확한 위치예요</p>
+          <CampusMap categories={[]} activeId={null} onSelect={() => {}} spot={post.spot} />
+        </div>
       )}
 
       <section className="comments">

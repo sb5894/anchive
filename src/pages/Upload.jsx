@@ -4,12 +4,15 @@ import { useIdentity } from '../lib/IdentityContext'
 import { UNCATEGORIZED_ID } from '../lib/events'
 import { subscribeLocations } from '../lib/locations'
 import { createPost } from '../lib/posts'
+import CampusMap from '../components/CampusMap'
 
 export default function Upload() {
   const navigate = useNavigate()
   const { uid, identity } = useIdentity()
   const [locations, setLocations] = useState([])
   const [locationId, setLocationId] = useState('')
+  const [spot, setSpot] = useState(null)
+  const [showPicker, setShowPicker] = useState(false)
   const [files, setFiles] = useState([])
   const [caption, setCaption] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -36,6 +39,7 @@ export default function Upload() {
       const postId = await createPost({
         eventId: UNCATEGORIZED_ID, // 이 디자인은 행사 종류 대신 장소로 분류하므로 고정값 사용
         locationId,
+        spot,
         authorUid: uid,
         authorInfo: identity,
         files,
@@ -64,6 +68,30 @@ export default function Upload() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="field">
+          <button
+            type="button"
+            className="spot-toggle"
+            onClick={() => setShowPicker((v) => !v)}
+          >
+            📍 {showPicker ? '정확한 위치 접기' : '정확한 위치 콕 찍기 (선택)'}
+          </button>
+          {showPicker && (
+            <>
+              <p className="hint">
+                지도를 탭해서 정확히 어디서 찍었는지 표시할 수 있어요. 안 찍어도 위에서 고른
+                장소로 잘 올라가니 걱정 마세요.
+              </p>
+              <CampusMap categories={locations} activeId={locationId} onSelect={setLocationId} spot={spot} onMapClick={setSpot} />
+              {spot && (
+                <button type="button" className="spot-clear" onClick={() => setSpot(null)}>
+                  ✕ 콕 찍은 위치 지우기
+                </button>
+              )}
+            </>
+          )}
         </div>
 
         <div className="field">

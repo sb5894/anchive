@@ -24,7 +24,7 @@ function extensionOf(filename) {
   return match ? match[1].toLowerCase() : 'mp4'
 }
 
-export async function createPost({ eventId, locationId, authorUid, authorInfo, files, caption }) {
+export async function createPost({ eventId, locationId, spot, authorUid, authorInfo, files, caption }) {
   const postRef = doc(collection(db, 'posts'))
 
   const media = []
@@ -48,6 +48,8 @@ export async function createPost({ eventId, locationId, authorUid, authorInfo, f
     // 이 디자인(캠퍼스 지도)은 행사 종류 대신 장소로 분류한다. events와 별개 필드라
     // locationId가 없는 기존 글(다른 시안에서 올린 글)도 그대로 호환된다.
     locationId: locationId || null,
+    // 지도를 직접 탭해서 콕 찍은 정확한 위치(선택 사항). {x,y}는 지도 이미지 기준 퍼센트 좌표.
+    spot: spot || null,
     authorUid,
     authorInfo,
     media,

@@ -136,12 +136,52 @@ button.primary:disabled {
 .campus-map-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 2 / 3;
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--map-sky);
   margin-bottom: 4px;
+}
+
+.campus-map-wrap.pickable {
+  cursor: crosshair;
+}
+
+.spot-toggle {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.spot-clear {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--danger);
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.map-spot-marker {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--danger);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
 }
 
 .campus-map-illustration {

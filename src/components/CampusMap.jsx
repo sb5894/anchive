@@ -1,50 +1,69 @@
-// 실제 학교 항공사진을 그대로 쓰지 않고, "건물동 2개가 나란히 배치 + 넓은 운동장"이라는
-// 실제 배치 구조에서 영감만 받아 새로 그린 오리지널 평면도 일러스트다.
-// 지도는 장식일 뿐 클릭 가능한 요소가 아니고, 실제 상호작용은 위에 얹힌 <button> 핀들이 담당한다.
+// 실제 학교 배치도(후관/본관+유치원/신관/비봉관 건물 + 운동장/놀이터/두손이텃밭/학교숲 공간)를
+// 참고해서 새로 그린 오리지널 평면도 일러스트. 실사 도면을 그대로 쓰지 않고 비율만 반영했다.
+// categories 핀은 장소를 고르는 접근 경로이고, onMapClick이 주어지면 지도를 직접 탭해서
+// "정확히 여기서 찍었어요"라고 좌표를 콕 찍는 보조 입력도 지원한다(둘 다 선택 사항).
 
-// 장소 id별로 지도 위 고정 위치(퍼센트 좌표, 왼쪽 위 기준)를 의미 있게 배정한다.
-// 알 수 없는 장소가 추가되면 운동장 빈 자리 쪽에 순서대로 배치한다.
 const LOCATION_POSITIONS = {
-  'main-building': { left: 26, top: 21 },
-  library: { left: 52, top: 15 },
-  annex: { left: 75, top: 36 },
-  cafeteria: { left: 91, top: 48 },
-  playground: { left: 50, top: 70 },
-  gate: { left: 42, top: 90 },
+  hugwan: { left: 54, top: 6 },
+  bongwan: { left: 43, top: 21 },
+  kindergarten: { left: 88, top: 21 },
+  singwan: { left: 16, top: 43 },
+  bibonghall: { left: 81, top: 85 },
+  playground: { left: 51, top: 50 },
+  garden: { left: 16, top: 61 },
+  forest: { left: 16, top: 71 },
+  'play-area': { left: 44, top: 74 },
 }
 const FALLBACK_SLOTS = [
-  { left: 15, top: 70 },
-  { left: 30, top: 76 },
-  { left: 65, top: 76 },
-  { left: 80, top: 70 },
+  { left: 60, top: 30 },
+  { left: 70, top: 55 },
+  { left: 30, top: 85 },
 ]
 
-export default function CampusMap({ categories, activeId, onSelect }) {
+export default function CampusMap({ categories, activeId, onSelect, spot, onMapClick }) {
   let fallbackIndex = 0
+
+  function handleWrapClick(e) {
+    if (!onMapClick) return
+    if (e.target.closest('.map-pin')) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    onMapClick({ x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 })
+  }
+
   return (
-    <div className="campus-map-wrap">
+    <div
+      className={onMapClick ? 'campus-map-wrap pickable' : 'campus-map-wrap'}
+      onClick={handleWrapClick}
+    >
       <svg
         className="campus-map-illustration"
-        viewBox="0 0 400 300"
+        viewBox="0 0 400 600"
         aria-hidden="true"
         focusable="false"
+        preserveAspectRatio="xMidYMin meet"
       >
         <defs>
           <linearGradient id="mapSky" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--map-sky-top)" />
             <stop offset="100%" stopColor="var(--map-sky)" />
           </linearGradient>
-          <linearGradient id="mapMain" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--map-building-light)" />
-            <stop offset="100%" stopColor="var(--map-building)" />
+          <linearGradient id="mapHugwan" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--map-hugwan-light)" />
+            <stop offset="100%" stopColor="var(--map-hugwan)" />
           </linearGradient>
-          <linearGradient id="mapAnnex" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--map-building-2-light)" />
-            <stop offset="100%" stopColor="var(--map-building-2)" />
+          <linearGradient id="mapBongwan" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--map-bongwan-light)" />
+            <stop offset="100%" stopColor="var(--map-bongwan)" />
           </linearGradient>
-          <linearGradient id="mapPlay" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--map-play-light)" />
-            <stop offset="100%" stopColor="var(--map-play)" />
+          <linearGradient id="mapSingwan" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="var(--map-singwan-light)" />
+            <stop offset="100%" stopColor="var(--map-singwan)" />
+          </linearGradient>
+          <linearGradient id="mapBibong" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--map-bibong-light)" />
+            <stop offset="100%" stopColor="var(--map-bibong)" />
           </linearGradient>
           <radialGradient id="mapTree" cx="35%" cy="30%" r="75%">
             <stop offset="0%" stopColor="var(--map-tree-light)" />
@@ -58,162 +77,122 @@ export default function CampusMap({ categories, activeId, onSelect }) {
           </filter>
         </defs>
 
-        <rect x="0" y="0" width="400" height="300" fill="url(#mapSky)" />
+        <rect x="0" y="0" width="400" height="600" fill="url(#mapSky)" />
 
-        {/* 건물들이 하늘 위에 붕 떠 보이지 않도록, 건물 구역 아래 옅은 바닥면을 깔아준다 */}
-        <ellipse cx="205" cy="130" rx="200" ry="90" fill="var(--map-ground)" opacity="0.55" />
+        {/* 건물이 하늘에 붕 떠 보이지 않도록 건물 구역 아래 옅은 바닥면을 깐다 */}
+        <ellipse cx="180" cy="150" rx="220" ry="130" fill="var(--map-ground)" opacity="0.5" />
 
-        {/* 해 */}
-        <circle cx="362" cy="30" r="16" fill="var(--map-sun)" opacity="0.55" filter="url(#mapSoftBlur)" />
-        <circle cx="362" cy="30" r="10" fill="var(--map-sun)" opacity="0.85" />
-
-        {/* 구름 */}
+        {/* 해 / 구름 */}
+        <circle cx="355" cy="45" r="18" fill="var(--map-sun)" opacity="0.5" filter="url(#mapSoftBlur)" />
+        <circle cx="355" cy="45" r="11" fill="var(--map-sun)" opacity="0.85" />
         <g fill="var(--map-cloud)" opacity="0.9">
-          <ellipse cx="55" cy="24" rx="20" ry="8" />
-          <ellipse cx="74" cy="19" rx="14" ry="7" />
-          <ellipse cx="40" cy="19" rx="12" ry="6" />
+          <ellipse cx="45" cy="40" rx="20" ry="8" />
+          <ellipse cx="62" cy="35" rx="14" ry="7" />
         </g>
 
-        {/* 본관 그림자(바닥 접지감) */}
-        <ellipse cx="120" cy="94" rx="80" ry="6" fill="var(--map-ground-shadow)" opacity="0.35" filter="url(#mapSoftBlur)" />
-
-        {/* 본관: 길게 이어진 막대 + 아래로 뻗은 교실동(콤 모양), 창문 디테일 포함 */}
+        {/* 후관 그림자 + 건물 */}
+        <ellipse cx="215" cy="60" rx="90" ry="6" fill="var(--map-ground-shadow)" opacity="0.32" filter="url(#mapSoftBlur)" />
         <g filter="url(#mapShadow)">
-          <rect x="45" y="34" width="150" height="24" rx="5" fill="url(#mapMain)" />
-          <rect x="45" y="34" width="150" height="7" rx="3" fill="var(--map-roof)" />
-          {[55, 95, 135, 170].map((x) => (
-            <rect key={x} x={x} y="58" width="20" height="34" rx="4" fill="url(#mapMain)" />
-          ))}
-        </g>
-        {/* 본관 창문 */}
-        <g fill="var(--map-window)" opacity="0.85">
-          {[58, 78, 98, 118, 138, 158, 178].map((x) => (
-            <rect key={x} x={x} y="42" width="8" height="8" rx="1.5" />
-          ))}
-          {[55, 95, 135, 170].map((x) => (
-            <g key={x}>
-              <rect x={x + 4} y="65" width="12" height="9" rx="1.5" />
-              <rect x={x + 4} y="80" width="12" height="9" rx="1.5" />
-            </g>
-          ))}
-        </g>
-
-        {/* 깃대 */}
-        <line x1="22" y1="40" x2="22" y2="92" stroke="var(--map-pole)" strokeWidth="2" />
-        <polygon points="22,40 22,52 36,46" fill="var(--map-flag)" />
-
-        {/* 도서관 그림자 */}
-        <ellipse cx="205" cy="53" rx="20" ry="4" fill="var(--map-ground-shadow)" opacity="0.3" filter="url(#mapSoftBlur)" />
-
-        {/* 도서관: 둥근 지붕의 작은 별채 */}
-        <g filter="url(#mapShadow)">
-          <rect x="188" y="26" width="34" height="26" rx="4" fill="var(--map-library)" />
-          <path d="M186 26 Q205 6 224 26 Z" fill="var(--map-library-roof)" />
-          <rect x="200" y="38" width="10" height="14" rx="2" fill="var(--map-window)" opacity="0.9" />
-        </g>
-
-        {/* 별관 그림자 */}
-        <ellipse cx="280" cy="127" rx="90" ry="6" fill="var(--map-ground-shadow)" opacity="0.35" filter="url(#mapSoftBlur)" />
-
-        {/* 별관: 본관과 살짝 어긋나게 배치된 두 번째 긴 건물 */}
-        <g filter="url(#mapShadow)">
-          <rect x="195" y="70" width="170" height="24" rx="5" fill="url(#mapAnnex)" />
-          <rect x="195" y="70" width="170" height="7" rx="3" fill="var(--map-roof-2)" />
-          {[205, 240, 275, 310].map((x) => (
-            <rect key={x} x={x} y="94" width="18" height="30" rx="4" fill="url(#mapAnnex)" />
-          ))}
+          <rect x="90" y="15" width="250" height="42" rx="6" fill="url(#mapHugwan)" />
+          <rect x="90" y="15" width="250" height="9" rx="4" fill="var(--map-hugwan-roof)" />
         </g>
         <g fill="var(--map-window)" opacity="0.85">
-          {[199, 219, 239, 259, 279, 299, 319, 339].map((x) => (
-            <rect key={x} x={x} y="77" width="7" height="7" rx="1.5" />
+          {[105, 135, 165, 195, 225, 255, 285, 315].map((x) => (
+            <rect key={x} x={x} y="32" width="10" height="16" rx="2" />
           ))}
         </g>
 
-        {/* 급식실 그림자 */}
-        <ellipse cx="365" cy="140" rx="24" ry="4" fill="var(--map-ground-shadow)" opacity="0.3" filter="url(#mapSoftBlur)" />
+        {/* 연결통로 */}
+        <rect x="202" y="57" width="26" height="48" fill="var(--map-corridor)" opacity="0.9" />
+        <line x1="215" y1="57" x2="215" y2="105" stroke="var(--map-corridor-line)" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
 
-        {/* 급식실: 물결 지붕의 작은 별채 */}
+        {/* 본관 + 유치원 그림자 */}
+        <ellipse cx="215" cy="150" rx="150" ry="7" fill="var(--map-ground-shadow)" opacity="0.35" filter="url(#mapSoftBlur)" />
+
+        {/* 본관 */}
         <g filter="url(#mapShadow)">
-          <rect x="345" y="112" width="40" height="26" rx="4" fill="var(--map-cafeteria)" />
-          <path
-            d="M343 112 q5 -8 10 0 q5 -8 10 0 q5 -8 10 0 q5 -8 10 0 v6 h-40 z"
-            fill="var(--map-cafeteria-roof)"
-          />
-          <rect x="358" y="124" width="14" height="10" rx="2" fill="var(--map-window)" opacity="0.9" />
+          <rect x="35" y="105" width="270" height="42" rx="6" fill="url(#mapBongwan)" />
+          <rect x="35" y="105" width="270" height="9" rx="4" fill="var(--map-bongwan-roof)" />
+        </g>
+        <g fill="var(--map-window)" opacity="0.85">
+          {[50, 80, 110, 140, 170, 200, 230, 260, 285].map((x) => (
+            <rect key={x} x={x} y="122" width="10" height="16" rx="2" />
+          ))}
+        </g>
+
+        {/* 유치원(본관과 같은 줄, 오른쪽 끝에 붙은 작은 구획) */}
+        <g filter="url(#mapShadow)">
+          <rect x="308" y="105" width="92" height="42" rx="6" fill="var(--map-kinder)" />
+          <rect x="308" y="105" width="92" height="9" rx="4" fill="var(--map-kinder-roof)" />
+        </g>
+        <circle cx="330" cy="132" r="6" fill="var(--map-kinder-deco)" />
+        <circle cx="352" cy="132" r="6" fill="var(--map-kinder-deco)" opacity="0.8" />
+        <circle cx="374" cy="132" r="6" fill="var(--map-kinder-deco)" opacity="0.6" />
+
+        {/* 신관 그림자 + 건물(세로형) */}
+        <ellipse cx="62" cy="332" rx="8" ry="72" fill="var(--map-ground-shadow)" opacity="0.3" filter="url(#mapSoftBlur)" />
+        <g filter="url(#mapShadow)">
+          <rect x="35" y="190" width="55" height="140" rx="6" fill="url(#mapSingwan)" />
+          <rect x="35" y="190" width="55" height="9" rx="4" fill="var(--map-singwan-roof)" />
+        </g>
+        <g fill="var(--map-window)" opacity="0.85">
+          {[210, 235, 260, 285, 305].map((y) => (
+            <rect key={y} x="48" y={y} width="28" height="12" rx="2" />
+          ))}
         </g>
 
         {/* 운동장 */}
-        <rect x="20" y="150" width="330" height="108" rx="14" fill="url(#mapPlay)" />
-        <ellipse
-          cx="185"
-          cy="204"
-          rx="120"
-          ry="36"
-          fill="none"
-          stroke="var(--map-track)"
-          strokeWidth="5"
-          opacity="0.55"
-        />
-        <ellipse
-          cx="185"
-          cy="204"
-          rx="95"
-          ry="26"
-          fill="none"
-          stroke="var(--map-track)"
-          strokeWidth="2"
-          opacity="0.35"
-        />
+        <rect x="105" y="195" width="195" height="210" rx="16" fill="var(--map-play)" />
+        <ellipse cx="202" cy="300" rx="80" ry="80" fill="none" stroke="var(--map-track)" strokeWidth="5" opacity="0.6" />
+        <ellipse cx="202" cy="300" rx="55" ry="55" fill="none" stroke="var(--map-track)" strokeWidth="2" opacity="0.4" />
+
+        {/* 두손이텃밭 */}
+        <g filter="url(#mapShadow)">
+          <rect x="35" y="345" width="55" height="45" rx="6" fill="var(--map-garden)" />
+        </g>
+        <g fill="var(--map-garden-deco)">
+          <circle cx="48" cy="365" r="4" />
+          <circle cx="62" cy="358" r="4" />
+          <circle cx="76" cy="368" r="4" />
+          <circle cx="55" cy="378" r="4" />
+        </g>
+
+        {/* 학교숲 */}
+        <g filter="url(#mapShadow)">
+          <rect x="35" y="405" width="55" height="45" rx="6" fill="var(--map-forest-bg)" />
+        </g>
         <g>
-          {[
-            [32, 164, 9],
-            [366, 168, 8],
-            [34, 248, 8],
-            [340, 244, 7],
-          ].map(([cx, cy, r]) => (
+          {[[48, 425, 8], [66, 418, 7], [76, 432, 6]].map(([cx, cy, r]) => (
+            <circle key={cx} cx={cx} cy={cy} r={r} fill="url(#mapTree)" />
+          ))}
+        </g>
+
+        {/* 놀이터 */}
+        <g filter="url(#mapShadow)">
+          <rect x="120" y="420" width="110" height="45" rx="6" fill="var(--map-play-area)" />
+        </g>
+        <g stroke="var(--map-play-area-deco)" strokeWidth="3" fill="none" opacity="0.7">
+          <path d="M138 452 v-18 M138 434 h20 v18" />
+          <circle cx="185" cy="443" r="9" />
+          <path d="M210 452 l10 -18 l10 18 z" />
+        </g>
+
+        {/* 비봉관(강당) */}
+        <ellipse cx="325" cy="558" rx="48" ry="6" fill="var(--map-ground-shadow)" opacity="0.3" filter="url(#mapSoftBlur)" />
+        <g filter="url(#mapShadow)">
+          <rect x="280" y="460" width="90" height="95" rx="6" fill="url(#mapBibong)" />
+          <path d="M276 460 l45 -22 l45 22 z" fill="var(--map-bibong-roof)" />
+        </g>
+        <rect x="310" y="510" width="30" height="45" rx="3" fill="var(--map-window)" opacity="0.9" />
+
+        {/* 트리 데코 (운동장 가장자리) */}
+        <g>
+          {[[112, 205, 9], [292, 210, 8], [290, 395, 8]].map(([cx, cy, r]) => (
             <g key={`${cx}-${cy}`}>
               <rect x={cx - 1.5} y={cy + r - 2} width="3" height="9" fill="var(--map-tree-trunk)" />
               <circle cx={cx} cy={cy} r={r} fill="url(#mapTree)" />
             </g>
           ))}
-        </g>
-
-        {/* 부지 밖 다른 건물(우리 학교 건물 아님) */}
-        <g opacity="0.7">
-          <rect
-            x="328"
-            y="228"
-            width="56"
-            height="30"
-            rx="3"
-            fill="var(--map-outside)"
-            stroke="var(--map-outside-line)"
-            strokeDasharray="4 3"
-            strokeWidth="2"
-          />
-          <text x="356" y="270" textAnchor="middle" fontSize="8" fill="var(--map-outside-text)">
-            다른 건물(교육지원청)
-          </text>
-        </g>
-
-        {/* 정문 앞 도로 */}
-        <rect x="0" y="268" width="400" height="32" fill="var(--map-road)" />
-        <line
-          x1="0"
-          y1="284"
-          x2="400"
-          y2="284"
-          stroke="#ffffff"
-          strokeWidth="2"
-          strokeDasharray="10 8"
-          opacity="0.5"
-        />
-        {/* 정문 구조물 자체로 "출입구"임을 표현하고, 이름표는 핀 라벨 하나로 통일한다
-            (SVG 텍스트 라벨을 따로 두면 핀 라벨과 중복돼 보이는 문제가 있었음) */}
-        <g filter="url(#mapShadow)">
-          <rect x="145" y="252" width="10" height="16" rx="2" fill="var(--map-gate)" />
-          <rect x="185" y="252" width="10" height="16" rx="2" fill="var(--map-gate)" />
-          <rect x="145" y="248" width="50" height="8" rx="2" fill="var(--map-gate)" />
         </g>
       </svg>
 
@@ -226,7 +205,10 @@ export default function CampusMap({ categories, activeId, onSelect }) {
             type="button"
             className={isActive ? 'map-pin active' : 'map-pin'}
             style={{ left: `${slot.left}%`, top: `${slot.top}%` }}
-            onClick={() => onSelect(cat.id)}
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelect(cat.id)
+            }}
             aria-pressed={isActive}
           >
             <span className="map-pin-dot" aria-hidden="true" />
@@ -234,6 +216,10 @@ export default function CampusMap({ categories, activeId, onSelect }) {
           </button>
         )
       })}
+
+      {spot && (
+        <span className="map-spot-marker" style={{ left: `${spot.x}%`, top: `${spot.y}%` }} aria-hidden="true" />
+      )}
     </div>
   )
 }
