@@ -228,38 +228,13 @@ span.map-spot-marker {
 
 .map-pin-dot {
   position: relative;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--pin-color) 15%, #fff), var(--pin-color));
   /* 배경이 무슨 색이든(노란 건물, 초록 잔디 등) 항상 도드라지도록 흰 테두리 링을 두른다 */
   box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-}
-
-/* 원 아래 작은 삼각 꼬리표. 흰 테두리(::before, 더 크게) 위에 색 채운 삼각형(::after, 작게)을
-   겹쳐서 원과 같은 흰 테두리 효과를 내고, 색도 원의 밝은 톤에 맞춰 옅게 써서 원-꼬리표 색이
-   따로 노는 느낌을 없앤다. */
-.map-pin-dot::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -12px;
-  transform: translateX(-50%);
-  border-left: 9px solid transparent;
-  border-right: 9px solid transparent;
-  border-top: 12px solid #fff;
-}
-
-.map-pin-dot::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -9px;
-  transform: translateX(-50%);
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-top: 9px solid color-mix(in srgb, var(--pin-color) 78%, #fff);
+  margin-bottom: 4px;
 }
 
 .map-pin-count {
