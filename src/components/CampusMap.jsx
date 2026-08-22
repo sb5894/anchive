@@ -60,6 +60,9 @@ export default function CampusMap({ categories, activeId, onSelect }) {
 
         <rect x="0" y="0" width="400" height="300" fill="url(#mapSky)" />
 
+        {/* 건물들이 하늘 위에 붕 떠 보이지 않도록, 건물 구역 아래 옅은 바닥면을 깔아준다 */}
+        <ellipse cx="205" cy="130" rx="200" ry="90" fill="var(--map-ground)" opacity="0.55" />
+
         {/* 해 */}
         <circle cx="362" cy="30" r="16" fill="var(--map-sun)" opacity="0.55" filter="url(#mapSoftBlur)" />
         <circle cx="362" cy="30" r="10" fill="var(--map-sun)" opacity="0.85" />
@@ -70,6 +73,9 @@ export default function CampusMap({ categories, activeId, onSelect }) {
           <ellipse cx="74" cy="19" rx="14" ry="7" />
           <ellipse cx="40" cy="19" rx="12" ry="6" />
         </g>
+
+        {/* 본관 그림자(바닥 접지감) */}
+        <ellipse cx="120" cy="94" rx="80" ry="6" fill="var(--map-ground-shadow)" opacity="0.35" filter="url(#mapSoftBlur)" />
 
         {/* 본관: 길게 이어진 막대 + 아래로 뻗은 교실동(콤 모양), 창문 디테일 포함 */}
         <g filter="url(#mapShadow)">
@@ -96,12 +102,18 @@ export default function CampusMap({ categories, activeId, onSelect }) {
         <line x1="22" y1="40" x2="22" y2="92" stroke="var(--map-pole)" strokeWidth="2" />
         <polygon points="22,40 22,52 36,46" fill="var(--map-flag)" />
 
+        {/* 도서관 그림자 */}
+        <ellipse cx="205" cy="53" rx="20" ry="4" fill="var(--map-ground-shadow)" opacity="0.3" filter="url(#mapSoftBlur)" />
+
         {/* 도서관: 둥근 지붕의 작은 별채 */}
         <g filter="url(#mapShadow)">
           <rect x="188" y="26" width="34" height="26" rx="4" fill="var(--map-library)" />
           <path d="M186 26 Q205 6 224 26 Z" fill="var(--map-library-roof)" />
           <rect x="200" y="38" width="10" height="14" rx="2" fill="var(--map-window)" opacity="0.9" />
         </g>
+
+        {/* 별관 그림자 */}
+        <ellipse cx="280" cy="127" rx="90" ry="6" fill="var(--map-ground-shadow)" opacity="0.35" filter="url(#mapSoftBlur)" />
 
         {/* 별관: 본관과 살짝 어긋나게 배치된 두 번째 긴 건물 */}
         <g filter="url(#mapShadow)">
@@ -116,6 +128,9 @@ export default function CampusMap({ categories, activeId, onSelect }) {
             <rect key={x} x={x} y="77" width="7" height="7" rx="1.5" />
           ))}
         </g>
+
+        {/* 급식실 그림자 */}
+        <ellipse cx="365" cy="140" rx="24" ry="4" fill="var(--map-ground-shadow)" opacity="0.3" filter="url(#mapSoftBlur)" />
 
         {/* 급식실: 물결 지붕의 작은 별채 */}
         <g filter="url(#mapShadow)">
@@ -193,14 +208,13 @@ export default function CampusMap({ categories, activeId, onSelect }) {
           strokeDasharray="10 8"
           opacity="0.5"
         />
+        {/* 정문 구조물 자체로 "출입구"임을 표현하고, 이름표는 핀 라벨 하나로 통일한다
+            (SVG 텍스트 라벨을 따로 두면 핀 라벨과 중복돼 보이는 문제가 있었음) */}
         <g filter="url(#mapShadow)">
           <rect x="145" y="252" width="10" height="16" rx="2" fill="var(--map-gate)" />
           <rect x="185" y="252" width="10" height="16" rx="2" fill="var(--map-gate)" />
           <rect x="145" y="248" width="50" height="8" rx="2" fill="var(--map-gate)" />
         </g>
-        <text x="170" y="246" textAnchor="middle" fontSize="9" fill="var(--map-gate-text)">
-          정문
-        </text>
       </svg>
 
       {categories.map((cat) => {

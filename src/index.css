@@ -11,6 +11,8 @@
   /* 캠퍼스 지도 일러스트 색상 */
   --map-sky-top: #dcebff;
   --map-sky: #f3f8ff;
+  --map-ground: #e6ecd8;
+  --map-ground-shadow: #4a5a3a;
   --map-sun: #ffd873;
   --map-cloud: #ffffff;
   --map-building-light: #ffcf9e;
