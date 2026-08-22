@@ -22,17 +22,17 @@ const FALLBACK_SLOTS = [
   { left: 30, top: 85 },
 ]
 
-// 건물/구역 색 구분 (핀·배지 색). 그림 위에서 확실히 눈에 띄도록 채도/명도를 높게 잡았다.
+// 건물/구역 색 구분 (핀·배지 색). 그림 위에서 확실히 눈에 띄도록 원색에 가깝게 잡았다.
 const LOCATION_COLORS = {
-  hugwan: '#ff5a4e',
-  bongwan: '#ff8a3d',
-  kindergarten: '#ffc93d',
-  singwan: '#3d8bff',
-  playground: '#ffb300',
-  garden: '#5fd93f',
-  forest: '#1fb35a',
-  'play-area': '#22c7dd',
-  bibonghall: '#8a6cff',
+  hugwan: '#ff2d1f',
+  bongwan: '#ff7a00',
+  kindergarten: '#ffd60a',
+  singwan: '#0a84ff',
+  playground: '#ff9f0a',
+  garden: '#32d600',
+  forest: '#00b35c',
+  'play-area': '#00d4e8',
+  bibonghall: '#7a3cff',
 }
 const DEFAULT_PIN_COLOR = '#4f5fe0'
 
