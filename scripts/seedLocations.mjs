@@ -20,7 +20,7 @@ const locations = [
   { id: 'bongwan', name: '본관' },
   { id: 'kindergarten', name: '유치원' },
   { id: 'singwan', name: '신관' },
-  { id: 'bibonghall', name: '비봉관(강당)' },
+  { id: 'bibonghall', name: '비봉관' },
   { id: 'playground', name: '운동장' },
   { id: 'play-area', name: '놀이터' },
   { id: 'garden', name: '두손이텃밭' },
