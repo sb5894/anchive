@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Gothic:wght@400;700;800&display=swap');
 
 :root {
-  --text: #2b2620;
-  --text-muted: #8a8072;
-  --bg: #faf6ee;
+  --text: #262626;
+  --text-muted: #737373;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-alt: #f2ecdd;
-  --border: #e6ddc8;
+  --surface-alt: #f5f5f5;
+  --border: #e5e5e5;
   --accent: #2f6f5b;
   --accent-soft: #e4efe9;
   --accent-contrast: #ffffff;
