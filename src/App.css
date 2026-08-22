@@ -216,7 +216,7 @@ span.map-spot-marker {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 3px;
+  gap: 0;
   min-width: 44px;
   min-height: 44px;
   padding: 4px;
@@ -230,17 +230,29 @@ span.map-spot-marker {
   position: relative;
   width: 30px;
   height: 30px;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(45deg);
-  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--pin-color) 60%, #fff), var(--pin-color));
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--pin-color) 40%, #fff), var(--pin-color));
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+  margin-bottom: 6px;
+}
+
+/* 원 아래 작은 삼각 꼬리표를 붙여서 "지도 핀" 느낌을 내되, 본체는 항상 정원이라
+   회전 각도 때문에 눕거나 찌그러져 보이는 일이 없게 한다 */
+.map-pin-dot::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid var(--pin-color);
 }
 
 .map-pin-count {
   position: absolute;
   top: -6px;
   right: -6px;
-  transform: rotate(-45deg);
   min-width: 16px;
   height: 16px;
   padding: 0 3px;
@@ -270,7 +282,7 @@ span.map-spot-marker {
 
 .map-pin.active .map-pin-dot {
   box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--pin-color), 0 3px 6px rgba(0, 0, 0, 0.35);
-  transform: rotate(45deg) scale(1.12);
+  transform: scale(1.12);
 }
 
 .map-pin.active .map-pin-label {
