@@ -24,14 +24,16 @@
   --shadow-soft: 0 10px 30px -12px rgba(120, 100, 70, 0.28);
   --shadow-bubble: 0 8px 22px -8px rgba(90, 110, 130, 0.4);
 
-  /* 비눗방울 테두리용 옅은 오로라 그라디언트 */
+  /* 비눗방울 테두리용 아주 옅은 무지개 rim — 흰색이 주가 되고 색은 살짝 스치는 정도 */
   --aurora-rim: conic-gradient(
     from 200deg,
-    rgba(255, 214, 235, 0.9),
-    rgba(214, 233, 255, 0.9),
-    rgba(214, 255, 240, 0.85),
-    rgba(255, 236, 214, 0.85),
-    rgba(255, 214, 235, 0.9)
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 214, 235, 0.5),
+    rgba(214, 233, 255, 0.5),
+    rgba(255, 255, 255, 0.95),
+    rgba(214, 255, 240, 0.45),
+    rgba(255, 236, 214, 0.45),
+    rgba(255, 255, 255, 0.95)
   );
 
   --display: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;

@@ -17,10 +17,10 @@ function seededRandom(seed) {
 // containerWidth(px) 기준으로 몇 칸으로 나눌지 정한다. 칸이 너무 작아지면
 // 방울이 손가락으로 누르기 어려워지므로 하한을 둔다.
 export function columnsForWidth(width) {
-  if (width >= 900) return 5
-  if (width >= 640) return 4
-  if (width >= 420) return 3
-  return 2
+  // 화면 크기와 상관없이 한 줄에 사진 3개 정도가 크게 보이도록 3칸으로 고정.
+  // 아주 좁은 화면(폰 세로)에서만 방울이 너무 작아지지 않게 2칸으로 줄인다.
+  if (width < 360) return 2
+  return 3
 }
 
 export function computeBubbleLayout(posts, containerWidth) {
@@ -33,8 +33,8 @@ export function computeBubbleLayout(posts, containerWidth) {
     const row = Math.floor(index / cols)
     const seed = post.id || String(index)
 
-    // 방울 지름: 칸의 58~86% 사이. 이웃 칸과 겹치지 않도록 여유를 남긴다.
-    const sizeRatio = 0.58 + seededRandom(`${seed}-size`) * 0.28
+    // 방울 지름: 칸의 74~92% 사이. 화면에 크게 보이도록 키우되, 이웃 칸과는 안 겹치게.
+    const sizeRatio = 0.74 + seededRandom(`${seed}-size`) * 0.18
     const size = cell * sizeRatio
 
     // 남는 여백 안에서만 흔들어 배치 → 절대 칸 밖(=화면 밖)으로 나가지 않는다.
