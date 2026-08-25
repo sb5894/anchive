@@ -71,56 +71,186 @@ button.primary:disabled {
   cursor: not-allowed;
 }
 
-.entry {
-  display: flex;
-  flex-direction: column;
-  padding-top: 15vh;
-}
-
 /* Feed */
 .feed-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.whoami {
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.view-toggle {
-  display: flex;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
-.toggle-btn {
-  flex: 1;
-  min-height: 44px;
-  padding: 10px 12px;
-  border-radius: 10px;
+.brand h1 {
+  margin: 0;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.whoami {
+  font-size: 13px;
+  color: var(--text-muted);
+  flex: none;
+  padding-top: 4px;
+}
+
+.whoami-btn {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 12px;
   border: 1px solid var(--border);
+  border-radius: 999px;
   background: var(--surface);
   color: var(--text);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 
+.admin-banner {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fff4e0;
+  border: 1px solid #f0c987;
+  color: #8a5a00;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 이름 고르기 모달 */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+
+.modal-sheet {
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modal-title {
+  font-size: 18px;
+  margin: 0 0 4px;
+}
+
+.modal-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.modal-actions .primary {
+  flex: 1;
+}
+
+.ghost-btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.comment-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.comment-locked .primary {
+  width: auto;
+  padding: 10px 18px;
+}
+
+/* 관리자용 카드 삭제 버튼 */
+.post-card-wrap {
+  position: relative;
+}
+
+.card-delete-btn {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(217, 83, 79, 0.92);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.map-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.toggle-btn {
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .toggle-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 .all-chip {
-  display: block;
-  width: 100%;
-  min-height: 44px;
-  margin-bottom: 12px;
-  text-align: center;
+  min-height: 38px;
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .map-section {
