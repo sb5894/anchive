@@ -88,15 +88,16 @@ export default function Feed() {
           <h1>안성초 추억지도</h1>
           <p className="brand-sub">124주년 개교기념일 팝업 게시판</p>
         </div>
-        {identity ? (
-          <span className="whoami">
-            {identity.grade}-{identity.class} {identity.name}
-          </span>
-        ) : (
-          <button type="button" className="whoami-btn" onClick={() => setPickerIntent('name')}>
-            이름 고르기
-          </button>
-        )}
+        {/* 이름을 눌러 다시 고를 수 있게 한다. 태블릿을 여러 학생이 돌려 쓸 때
+            앞사람 이름으로 글이 올라가는 걸 막는 유일한 수단이라 꼭 필요하다. */}
+        <button
+          type="button"
+          className="whoami-btn"
+          onClick={() => setPickerIntent('name')}
+          title={identity ? '눌러서 이름 바꾸기' : undefined}
+        >
+          {identity ? `${identity.grade}-${identity.class} ${identity.name}` : '이름 고르기'}
+        </button>
       </header>
 
       <div className="map-toolbar">
@@ -187,7 +188,9 @@ export default function Feed() {
           reason={
             pickerIntent === 'upload'
               ? '사진을 올리려면 누가 올렸는지 알 수 있게 이름이 필요해요.'
-              : '이름을 골라 두면 사진과 댓글을 남길 수 있어요.'
+              : identity
+                ? '다른 사람이 쓸 차례라면 이름을 새로 골라 주세요.'
+                : '이름을 골라 두면 사진과 댓글을 남길 수 있어요.'
           }
           onCancel={() => setPickerIntent(null)}
           onDone={() => {

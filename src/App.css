@@ -90,13 +90,6 @@ button.primary:disabled {
   margin: 2px 0 0;
 }
 
-.whoami {
-  font-size: 13px;
-  color: var(--text-muted);
-  flex: none;
-  padding-top: 4px;
-}
-
 .whoami-btn {
   flex: none;
   min-height: 36px;
