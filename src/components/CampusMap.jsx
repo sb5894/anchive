@@ -1,43 +1,12 @@
-import { Link } from 'react-router-dom'
+import { useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 // 사용자가 직접 만든 손그림풍 캠퍼스 일러스트(campus-map-2.png)를 배경으로 쓴다.
-// categories 핀은 장소를 고르는 접근 경로이고, onMapClick이 주어지면(업로드 화면)
-// 지도를 직접 탭해서 "정확히 여기서 찍었어요"라고 좌표를 콕 찍는 보조 입력도 지원한다.
+// 지도 위에는 "학생들이 찍은 사진"만 올려서 포토스팟 지도처럼 보이게 하고,
+// 장소 선택은 건물 영역 클릭(아래 map-region)과 지도 밖 칩 목록으로 처리한다.
+// onMapClick이 주어지면(업로드 화면) 지도를 탭해 정확한 촬영 위치를 콕 찍는 모드로 동작한다.
 
-// 핀(라벨)이 표시될 고정 지점
-const LOCATION_POSITIONS = {
-  hugwan: { left: 50, top: 13 },
-  bongwan: { left: 44, top: 33 },
-  kindergarten: { left: 87, top: 34 },
-  singwan: { left: 14, top: 54 },
-  playground: { left: 62, top: 59 },
-  garden: { left: 13, top: 72 },
-  forest: { left: 13, top: 84 },
-  'play-area': { left: 48, top: 86 },
-  bibonghall: { left: 84, top: 86 },
-}
-const FALLBACK_SLOTS = [
-  { left: 60, top: 30 },
-  { left: 70, top: 55 },
-  { left: 30, top: 85 },
-]
-
-// 건물/구역 색 구분 (핀·배지 색). 그림 위에서 확실히 눈에 띄도록 원색에 가깝게 잡았다.
-const LOCATION_COLORS = {
-  hugwan: '#ff2d1f',
-  bongwan: '#ff7a00',
-  kindergarten: '#ffd60a',
-  singwan: '#0a84ff',
-  playground: '#ff9f0a',
-  garden: '#32d600',
-  forest: '#00b35c',
-  'play-area': '#00d4e8',
-  bibonghall: '#7a3cff',
-}
-const DEFAULT_PIN_COLOR = '#4f5fe0'
-
-// 핀을 정확히 못 눌러도 건물 영역 아무 데나 눌러서 고를 수 있도록 하는 대략적인 히트 영역
-// (퍼센트 좌표: left, top, width, height). onMapClick(콕 찍기 모드)일 때는 쓰지 않는다.
+// 건물/구역을 눌러 장소를 고를 수 있는 대략적인 히트 영역(퍼센트 좌표)
 const LOCATION_REGIONS = {
   hugwan: { left: 14, top: 7, width: 71, height: 13 },
   bongwan: { left: 10, top: 25, width: 67, height: 15 },
@@ -50,94 +19,185 @@ const LOCATION_REGIONS = {
   bibonghall: { left: 69, top: 77, width: 30, height: 18 },
 }
 
-export default function CampusMap({ categories, activeId, onSelect, counts, spots, spot, onMapClick }) {
-  let fallbackIndex = 0
-  const allSpots = spots || (spot ? [{ id: 'single', ...spot }] : [])
+const MIN_ZOOM = 1
+const MAX_ZOOM = 3
+const ZOOM_STEP = 0.5
+
+// 이 거리(퍼센트) 안에 있으면 한 묶음으로 본다.
+// 확대 배율의 제곱으로 좁혀서, 끝까지 확대하면 몇 %밖에 안 떨어진 사진들도 개별로 풀리게 한다.
+function mergeRadiusFor(zoom) {
+  return 9 / (zoom * zoom)
+}
+
+// 가까이 있는 사진들을 거리 기준으로 묶는다.
+// 격자로 나누면 경계에 걸친 사진이 바로 옆인데도 안 묶여서, 거리 기반으로 처리한다.
+function clusterSpots(spots, zoom) {
+  const radius = mergeRadiusFor(zoom)
+  const clusters = []
+  for (const s of spots) {
+    const near = clusters.find(
+      (c) => Math.hypot(c.x - s.x, c.y - s.y) <= radius
+    )
+    if (near) {
+      near.items.push(s)
+      // 묶음 중심을 구성원 평균으로 갱신
+      near.x = near.items.reduce((sum, i) => sum + i.x, 0) / near.items.length
+      near.y = near.items.reduce((sum, i) => sum + i.y, 0) / near.items.length
+    } else {
+      clusters.push({ key: s.id || `${s.x}-${s.y}`, x: s.x, y: s.y, items: [s] })
+    }
+  }
+  return clusters
+}
+
+export default function CampusMap({ categories, activeId, onSelect, spots, spot, onMapClick }) {
+  const navigate = useNavigate()
+  const wrapRef = useRef(null)
+  const [zoom, setZoom] = useState(MIN_ZOOM)
+  const [openCluster, setOpenCluster] = useState(null)
+
+  const allSpots = spots || (spot ? [{ id: 'single', x: spot.x, y: spot.y }] : [])
+  const clusters = useMemo(() => clusterSpots(allSpots, zoom), [allSpots, zoom])
 
   function handleWrapClick(e) {
     if (!onMapClick) return
-    if (e.target.closest('.map-pin') || e.target.closest('.map-region')) return
+    if (e.target.closest('.map-spot') || e.target.closest('.map-region')) return
     const rect = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * 100
     const y = ((e.clientY - rect.top) / rect.height) * 100
     onMapClick({ x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 })
   }
 
+  function handleSpotClick(cluster) {
+    if (cluster.items.length === 1) {
+      const only = cluster.items[0]
+      if (only.id && only.id !== 'single') navigate(`/post/${only.id}`)
+      return
+    }
+    setOpenCluster(cluster)
+  }
+
   return (
-    <div
-      className={onMapClick ? 'campus-map-wrap pickable' : 'campus-map-wrap'}
-      onClick={handleWrapClick}
-    >
-      <img className="campus-map-illustration" src="/campus-map-2.png" alt="" aria-hidden="true" />
+    <div className="campus-map-outer">
+      <div
+        ref={wrapRef}
+        className={onMapClick ? 'campus-map-wrap pickable' : 'campus-map-wrap'}
+        onClick={handleWrapClick}
+      >
+        <div className="campus-map-zoomer" style={{ transform: `scale(${zoom})` }}>
+          <img className="campus-map-illustration" src="/campus-map-2.png" alt="" aria-hidden="true" />
 
-      {/* 건물 영역 아무데나 눌러도 그 장소가 선택되게 하는 넓은 히트 영역(콕 찍기 모드에서는 숨김) */}
-      {!onMapClick &&
-        categories.map((cat) => {
-          const region = LOCATION_REGIONS[cat.id]
-          if (!region) return null
-          return (
+          {/* 건물 영역을 눌러도 그 장소가 선택되게 하는 넓은 히트 영역(콕 찍기 모드에서는 숨김) */}
+          {!onMapClick &&
+            categories.map((cat) => {
+              const region = LOCATION_REGIONS[cat.id]
+              if (!region) return null
+              return (
+                <button
+                  key={`region-${cat.id}`}
+                  type="button"
+                  className={activeId === cat.id ? 'map-region active' : 'map-region'}
+                  aria-label={cat.name}
+                  style={{
+                    left: `${region.left}%`,
+                    top: `${region.top}%`,
+                    width: `${region.width}%`,
+                    height: `${region.height}%`,
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSelect(cat.id)
+                  }}
+                />
+              )
+            })}
+
+          {clusters.map((c) => {
+            const lead = c.items[0]
+            const extra = c.items.length - 1
+            const isPickerDot = lead.id === 'single'
+            return (
+              <button
+                key={c.key}
+                type="button"
+                className={isPickerDot ? 'map-spot picked' : 'map-spot'}
+                style={{
+                  left: `${c.x}%`,
+                  top: `${c.y}%`,
+                  transform: `translate(-50%, -50%) scale(${1 / zoom})`,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (!isPickerDot) handleSpotClick(c)
+                }}
+                aria-label={extra > 0 ? `사진 ${c.items.length}장 모여있는 곳` : '사진 보기'}
+              >
+                {lead.thumbUrl ? (
+                  <img src={lead.thumbUrl} alt="" />
+                ) : (
+                  <span className="map-spot-blank" aria-hidden="true" />
+                )}
+                {extra > 0 && <span className="map-spot-count">+{extra}</span>}
+              </button>
+            )
+          })}
+        </div>
+
+        {!onMapClick && (
+          <div className="map-zoom-controls">
             <button
-              key={`region-${cat.id}`}
               type="button"
-              className="map-region"
-              aria-label={cat.name}
-              style={{
-                left: `${region.left}%`,
-                top: `${region.top}%`,
-                width: `${region.width}%`,
-                height: `${region.height}%`,
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-                onSelect(cat.id)
-              }}
-            />
-          )
-        })}
+              onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP))}
+              disabled={zoom >= MAX_ZOOM}
+              aria-label="지도 크게 보기"
+            >
+              ＋
+            </button>
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP))}
+              disabled={zoom <= MIN_ZOOM}
+              aria-label="지도 작게 보기"
+            >
+              －
+            </button>
+          </div>
+        )}
+      </div>
 
-      {categories.map((cat) => {
-        const slot = LOCATION_POSITIONS[cat.id] || FALLBACK_SLOTS[fallbackIndex++ % FALLBACK_SLOTS.length]
-        const isActive = activeId === cat.id
-        const color = LOCATION_COLORS[cat.id] || DEFAULT_PIN_COLOR
-        const count = counts?.[cat.id]
-        return (
-          <button
-            key={cat.id}
-            type="button"
-            className={isActive ? 'map-pin active' : 'map-pin'}
-            style={{ left: `${slot.left}%`, top: `${slot.top}%`, '--pin-color': color }}
-            onClick={(e) => {
-              e.stopPropagation()
-              onSelect(cat.id)
-            }}
-            aria-pressed={isActive}
-          >
-            <span className="map-pin-dot" aria-hidden="true">
-              {!!count && <span className="map-pin-count">{count}</span>}
-            </span>
-            <span className="map-pin-label">{cat.name}</span>
-          </button>
-        )
-      })}
-
-      {allSpots.map((s) =>
-        s.id && s.id !== 'single' ? (
-          <Link
-            key={s.id}
-            to={`/post/${s.id}`}
-            className="map-spot-marker"
-            style={{ left: `${s.x}%`, top: `${s.y}%` }}
+      {openCluster && (
+        <div className="modal-backdrop" onClick={() => setOpenCluster(null)}>
+          <div
+            className="modal-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="이 자리에서 찍은 사진"
             onClick={(e) => e.stopPropagation()}
-            aria-label="이 위치에서 찍은 사진 보기"
-          />
-        ) : (
-          <span
-            key={s.id || `${s.x}-${s.y}`}
-            className="map-spot-marker"
-            style={{ left: `${s.x}%`, top: `${s.y}%` }}
-            aria-hidden="true"
-          />
-        )
+          >
+            <h2 className="modal-title">이 자리에서 찍은 사진</h2>
+            <p className="modal-sub">{openCluster.items.length}장이 모여 있어요. 눌러서 볼 수 있어요.</p>
+            <div className="cluster-grid">
+              {openCluster.items.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="cluster-item"
+                  onClick={() => {
+                    setOpenCluster(null)
+                    navigate(`/post/${item.id}`)
+                  }}
+                >
+                  {item.thumbUrl ? <img src={item.thumbUrl} alt="" /> : <span>사진</span>}
+                </button>
+              ))}
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="ghost-btn" onClick={() => setOpenCluster(null)}>
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

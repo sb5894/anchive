@@ -58,7 +58,15 @@ export default function Feed() {
   }, [allPosts])
 
   const mapSpots = useMemo(
-    () => allPosts.filter((p) => p.spot).map((p) => ({ id: p.id, x: p.spot.x, y: p.spot.y })),
+    () =>
+      allPosts
+        .filter((p) => p.spot)
+        .map((p) => ({
+          id: p.id,
+          x: p.spot.x,
+          y: p.spot.y,
+          thumbUrl: p.media?.[0]?.url,
+        })),
     [allPosts]
   )
 
