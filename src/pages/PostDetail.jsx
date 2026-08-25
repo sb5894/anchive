@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
 import CampusMap from '../components/CampusMap'
 import IdentityPicker from '../components/IdentityPicker'
+import { ETC_ID, ETC_NAME, locationIdForSpot } from '../lib/campusRegions'
+import { subscribeLocations } from '../lib/locations'
 import {
   addComment,
   editComment,
@@ -27,11 +29,20 @@ export default function PostDetail() {
   const [captionDraft, setCaptionDraft] = useState('')
   const [actionError, setActionError] = useState('')
   const [showPicker, setShowPicker] = useState(false)
+  const [locations, setLocations] = useState([])
 
   useEffect(() => subscribePost(postId, setPost), [postId])
   useEffect(() => subscribeComments(postId, setComments), [postId])
+  useEffect(() => subscribeLocations(setLocations), [])
 
   if (!post) return <div className="page center">불러오는 중...</div>
+
+  // 저장된 장소가 아니라 찍힌 좌표에서 계산한다(Feed·Upload와 같은 기준).
+  const spotLocationId = post.spot ? locationIdForSpot(post.spot) : null
+  const spotLocationName =
+    spotLocationId === ETC_ID
+      ? ETC_NAME
+      : locations.find((l) => l.id === spotLocationId)?.name || ETC_NAME
 
   async function runAction(fn) {
     try {
@@ -157,7 +168,9 @@ export default function PostDetail() {
 
       {post.spot && (
         <div className="spot-preview">
-          <p className="hint">📍 이 사진을 찍은 정확한 위치예요</p>
+          <p className="hint">
+            📍 <strong>{spotLocationName}</strong>에서 찍은 사진이에요
+          </p>
           <CampusMap categories={[]} activeId={null} onSelect={() => {}} spot={post.spot} />
         </div>
       )}

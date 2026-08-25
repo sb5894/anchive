@@ -1,44 +1,47 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
 import { UNCATEGORIZED_ID } from '../lib/events'
 import { subscribeLocations } from '../lib/locations'
 import { createPost } from '../lib/posts'
+import { ETC_ID, ETC_NAME, locationIdForSpot, regionCenter } from '../lib/campusRegions'
 import CampusMap from '../components/CampusMap'
 
 export default function Upload() {
   const navigate = useNavigate()
   const { uid, identity } = useIdentity()
   const [locations, setLocations] = useState([])
-  const [locationId, setLocationId] = useState('')
   const [spot, setSpot] = useState(null)
-  const [showPicker, setShowPicker] = useState(false)
   const [files, setFiles] = useState([])
   const [caption, setCaption] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    const unsub = subscribeLocations((list) => {
-      setLocations(list)
-      if (list.length > 0 && !locationId) setLocationId(list[0].id)
-    })
-    return unsub
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  useEffect(() => subscribeLocations(setLocations), [])
+
+  // 찍은 좌표가 어느 장소인지는 좌표에서 바로 계산한다(따로 고르지 않는다).
+  const pickedLocationId = useMemo(() => (spot ? locationIdForSpot(spot) : null), [spot])
+  const pickedLocationName = useMemo(() => {
+    if (!pickedLocationId) return null
+    if (pickedLocationId === ETC_ID) return ETC_NAME
+    return locations.find((l) => l.id === pickedLocationId)?.name || ETC_NAME
+  }, [pickedLocationId, locations])
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!files.length || !locationId) {
-      setError('장소와 사진/동영상을 선택해 주세요.')
+    if (!spot) {
+      setError('사진을 찍은 위치를 지도에서 골라 주세요.')
+      return
+    }
+    if (!files.length) {
+      setError('올릴 사진이나 동영상을 선택해 주세요.')
       return
     }
     setSubmitting(true)
     setError('')
     try {
       const postId = await createPost({
-        eventId: UNCATEGORIZED_ID, // 이 디자인은 행사 종류 대신 장소로 분류하므로 고정값 사용
-        locationId,
+        eventId: UNCATEGORIZED_ID,
         spot,
         authorUid: uid,
         authorInfo: identity,
@@ -60,37 +63,31 @@ export default function Upload() {
 
       <form onSubmit={handleSubmit}>
         <div className="field">
-          <label>장소</label>
-          <select value={locationId} onChange={(e) => setLocationId(e.target.value)}>
-            {locations.map((loc) => (
-              <option key={loc.id} value={loc.id}>
-                {loc.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          <label>사진을 찍은 곳</label>
+          <p className="hint">지도에서 사진을 찍은 자리를 눌러 주세요.</p>
+          <CampusMap categories={locations} activeId={null} onSelect={() => {}} spot={spot} onMapClick={setSpot} />
 
-        <div className="field">
-          <button
-            type="button"
-            className="spot-toggle"
-            onClick={() => setShowPicker((v) => !v)}
-          >
-            📍 {showPicker ? '정확한 위치 접기' : '정확한 위치 콕 찍기 (선택)'}
-          </button>
-          {showPicker && (
-            <>
-              <p className="hint">
-                지도를 탭해서 정확히 어디서 찍었는지 표시할 수 있어요. 안 찍어도 위에서 고른
-                장소로 잘 올라가니 걱정 마세요.
-              </p>
-              <CampusMap categories={locations} activeId={locationId} onSelect={setLocationId} spot={spot} onMapClick={setSpot} />
-              {spot && (
-                <button type="button" className="spot-clear" onClick={() => setSpot(null)}>
-                  ✕ 콕 찍은 위치 지우기
-                </button>
-              )}
-            </>
+          {/* 지도 탭과 완전히 동등한 또 하나의 입력 수단. 고르면 그 구역 한가운데에 찍힌다. */}
+          <p className="hint pick-list-title">정해진 장소에서 고르기</p>
+          <div className="event-filter">
+            {locations.map((loc) => (
+              <button
+                key={loc.id}
+                type="button"
+                className={pickedLocationId === loc.id ? 'chip active' : 'chip'}
+                onClick={() => setSpot(regionCenter(loc.id))}
+              >
+                {loc.name}
+              </button>
+            ))}
+          </div>
+
+          {spot ? (
+            <p className="picked-where">
+              지금 고른 곳: <strong>{pickedLocationName}</strong>
+            </p>
+          ) : (
+            <p className="picked-where empty-where">아직 위치를 고르지 않았어요</p>
           )}
         </div>
 

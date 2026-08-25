@@ -16,6 +16,7 @@ import {
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { db, storage } from '../firebase'
 import { resizeImage } from './image'
+import { locationIdForSpot } from './campusRegions'
 
 export const MAX_VIDEO_BYTES = 50 * 1024 * 1024 // storage.rules와 동일한 값으로 유지
 
@@ -24,7 +25,10 @@ function extensionOf(filename) {
   return match ? match[1].toLowerCase() : 'mp4'
 }
 
-export async function createPost({ eventId, locationId, spot, authorUid, authorInfo, files, caption }) {
+// 이 디자인은 장소를 따로 고르지 않는다. 지도에 찍은 좌표(spot) 하나만 저장하고,
+// "어느 건물인지"는 화면에 뿌릴 때 campusRegions의 locationIdForSpot()으로 계산한다.
+// 그래야 나중에 영역 박스를 손봐도 기존 사진이 자동으로 다시 분류된다.
+export async function createPost({ eventId, spot, authorUid, authorInfo, files, caption }) {
   const postRef = doc(collection(db, 'posts'))
 
   const media = []
@@ -37,6 +41,7 @@ export async function createPost({ eventId, locationId, spot, authorUid, authorI
 
     const uploadFile = isVideo ? file : await resizeImage(file)
     const ext = isVideo ? extensionOf(file.name) : 'jpg'
+    // eventId는 이 디자인에서 고정값이라 분류와 무관하고, Storage 경로를 만드는 용도로만 쓴다.
     const path = `events/${eventId}/posts/${postRef.id}/${crypto.randomUUID()}.${ext}`
     const storageRef = ref(storage, path)
     await uploadBytes(storageRef, uploadFile)
@@ -45,10 +50,7 @@ export async function createPost({ eventId, locationId, spot, authorUid, authorI
 
   await setDoc(postRef, {
     eventId,
-    // 이 디자인(캠퍼스 지도)은 행사 종류 대신 장소로 분류한다. events와 별개 필드라
-    // locationId가 없는 기존 글(다른 시안에서 올린 글)도 그대로 호환된다.
-    locationId: locationId || null,
-    // 지도를 직접 탭해서 콕 찍은 정확한 위치(선택 사항). {x,y}는 지도 이미지 기준 퍼센트 좌표.
+    // 지도에 찍은 촬영 위치. {x,y}는 지도 이미지 기준 퍼센트 좌표이고, 이 값이 분류의 유일한 근거다.
     spot: spot || null,
     authorUid,
     authorInfo,
@@ -78,13 +80,13 @@ export function subscribeFeed({ eventId }, callback) {
   })
 }
 
-// 장소(locationId) 기준 필터. locationId엔 where절을 안 걸고 정렬만 걸어서
-// 새 복합 색인을 안 만들어도 되게(클라이언트에서 거름 — 게시물 수가 적은 소규모 서비스라 무리 없음).
+// 장소 기준 필터. 저장된 값이 아니라 좌표에서 계산한 장소로 거른다.
+// where절 없이 정렬만 걸어서 새 복합 색인이 필요 없다(게시물 수가 적은 소규모 서비스라 무리 없음).
 export function subscribeFeedByLocation(locationId, callback) {
   const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'))
   return onSnapshot(q, (snap) => {
     const all = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => !p.deleted)
-    callback(locationId ? all.filter((p) => p.locationId === locationId) : all)
+    callback(locationId ? all.filter((p) => locationIdForSpot(p.spot) === locationId) : all)
   })
 }
 

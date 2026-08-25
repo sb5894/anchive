@@ -6,9 +6,7 @@ import { subscribeFeedByLocation, softDeletePost } from '../lib/posts'
 import PostCard from '../components/PostCard'
 import CampusMap from '../components/CampusMap'
 import IdentityPicker from '../components/IdentityPicker'
-
-const UNTAGGED_ID = 'untagged'
-const UNTAGGED_NAME = '위치 미지정'
+import { ETC_ID, ETC_NAME, locationIdForSpot } from '../lib/campusRegions'
 
 export default function Feed() {
   const navigate = useNavigate()
@@ -32,26 +30,19 @@ export default function Feed() {
 
   useEffect(() => subscribeFeedByLocation(null, setAllPosts), [])
 
-  const categories = useMemo(
-    () => [...locations, { id: UNTAGGED_ID, name: UNTAGGED_NAME }],
-    [locations]
-  )
+  // 어느 건물에도 안 걸치는 자리(통로·나무 등)에 찍힌 사진을 모아 보는 칸
+  const categories = useMemo(() => [...locations, { id: ETC_ID, name: ETC_NAME }], [locations])
 
   const currentCategoryName = useMemo(() => {
     if (!locationId) return '전체'
-    if (locationId === UNTAGGED_ID) return UNTAGGED_NAME
+    if (locationId === ETC_ID) return ETC_NAME
     return locations.find((l) => l.id === locationId)?.name || '전체'
   }, [locationId, locations])
-
-  const visiblePosts = useMemo(() => {
-    if (locationId === UNTAGGED_ID) return posts.filter((p) => !p.locationId)
-    return posts
-  }, [posts, locationId])
 
   const counts = useMemo(() => {
     const map = {}
     for (const p of allPosts) {
-      const key = p.locationId || UNTAGGED_ID
+      const key = locationIdForSpot(p.spot)
       map[key] = (map[key] || 0) + 1
     }
     return map
@@ -156,10 +147,10 @@ export default function Feed() {
       <p className="current-category">지금 보는 장소: {currentCategoryName}</p>
 
       <div className="post-grid">
-        {visiblePosts.map((p) => (
+        {posts.map((p) => (
           <PostCard key={p.id} post={p} onAdminDelete={isAdmin ? handleAdminDelete : undefined} />
         ))}
-        {visiblePosts.length === 0 && (
+        {posts.length === 0 && (
           <p className="empty">
             {locationId
               ? '이 장소에는 아직 사진이 없어요. 다른 장소를 눌러보세요.'

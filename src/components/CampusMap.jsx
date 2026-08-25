@@ -1,23 +1,12 @@
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { LOCATION_REGIONS } from '../lib/campusRegions'
 
 // 사용자가 직접 만든 손그림풍 캠퍼스 일러스트(campus-map-2.png)를 배경으로 쓴다.
 // 지도 위에는 "학생들이 찍은 사진"만 올려서 포토스팟 지도처럼 보이게 하고,
 // 장소 선택은 건물 영역 클릭(아래 map-region)과 지도 밖 칩 목록으로 처리한다.
 // onMapClick이 주어지면(업로드 화면) 지도를 탭해 정확한 촬영 위치를 콕 찍는 모드로 동작한다.
-
-// 건물/구역을 눌러 장소를 고를 수 있는 대략적인 히트 영역(퍼센트 좌표)
-const LOCATION_REGIONS = {
-  hugwan: { left: 14, top: 7, width: 71, height: 13 },
-  bongwan: { left: 10, top: 25, width: 67, height: 15 },
-  kindergarten: { left: 77, top: 26, width: 20, height: 14 },
-  singwan: { left: 2, top: 41, width: 24, height: 26 },
-  playground: { left: 27, top: 42, width: 69, height: 33 },
-  garden: { left: 1, top: 67, width: 25, height: 10 },
-  forest: { left: 1, top: 77, width: 25, height: 14 },
-  'play-area': { left: 28, top: 78, width: 40, height: 16 },
-  bibonghall: { left: 69, top: 77, width: 30, height: 18 },
-}
+// 영역 정의는 분류 로직과 공유해야 하므로 lib/campusRegions.js에 둔다.
 
 const MIN_ZOOM = 1
 const MAX_ZOOM = 3
@@ -86,6 +75,7 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
       >
         <div className="campus-map-zoomer" style={{ transform: `scale(${zoom})` }}>
           <img className="campus-map-illustration" src="/campus-map-2.png" alt="" aria-hidden="true" />
+
 
           {/* 건물 영역을 눌러도 그 장소가 선택되게 하는 넓은 히트 영역(콕 찍기 모드에서는 숨김) */}
           {!onMapClick &&
