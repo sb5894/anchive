@@ -1,3 +1,16 @@
+/* 마루 부리(네이버) — 제목용. 네이버가 제공하는 CSS는 굵기마다 폰트 이름이 따로라
+   쓰기 불편해서, woff2를 직접 가리키는 @font-face를 선언해 font-weight로 매핑한다.
+   제목은 어차피 굵게 쓰므로 용량을 아끼려 Bold 한 굵기만 불러온다(약 440KB).
+   font-display: swap — 폰트 받는 동안 글자가 안 보이는 현상을 막는다. */
+@font-face {
+  font-family: 'MaruBuri';
+  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Bold.woff2')
+    format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --text: #3a3a3a;
   --text-muted: #767676;
@@ -55,7 +68,10 @@
   --map-play-area: #bfe9f0;
   --map-play-area-deco: #4a9fb0;
 
-  --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --sans: 'Pretendard Variable', Pretendard, system-ui, 'Segoe UI', Roboto,
+    'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  /* 제목용. 책·앨범 같은 따뜻한 인상을 주려고 명조 계열을 쓴다. */
+  --serif: 'MaruBuri', 'Apple SD Gothic Neo', 'Noto Serif KR', serif;
 
   font: 16px/1.5 var(--sans);
   color-scheme: light;

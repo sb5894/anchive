@@ -141,7 +141,7 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
               disabled={zoom >= MAX_ZOOM}
               aria-label="지도 크게 보기"
             >
-              ＋
+              🔍＋
             </button>
             <button
               type="button"
@@ -149,7 +149,7 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
               disabled={zoom <= MIN_ZOOM}
               aria-label="지도 작게 보기"
             >
-              －
+              🔍－
             </button>
           </div>
         )}

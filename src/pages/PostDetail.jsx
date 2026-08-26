@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
 import CampusMap from '../components/CampusMap'
@@ -30,6 +30,9 @@ export default function PostDetail() {
   const [actionError, setActionError] = useState('')
   const [showPicker, setShowPicker] = useState(false)
   const [locations, setLocations] = useState([])
+  const [mediaIndex, setMediaIndex] = useState(0)
+  const [showSpotMap, setShowSpotMap] = useState(false)
+  const trackRef = useRef(null)
 
   useEffect(() => subscribePost(postId, setPost), [postId])
   useEffect(() => subscribeComments(postId, setComments), [postId])
@@ -101,6 +104,23 @@ export default function PostDetail() {
     await runAction(() => toggleLike(postId, uid))
   }
 
+  const mediaCount = post.media?.length || 0
+
+  // 스와이프로 넘겼을 때도 "2 / 4" 표시가 따라오도록 스크롤 위치에서 현재 장을 역산한다.
+  function handleTrackScroll(e) {
+    const el = e.currentTarget
+    const idx = Math.round(el.scrollLeft / el.clientWidth)
+    if (idx !== mediaIndex) setMediaIndex(Math.max(0, Math.min(mediaCount - 1, idx)))
+  }
+
+  function goToMedia(idx) {
+    const el = trackRef.current
+    if (!el) return
+    const next = Math.max(0, Math.min(mediaCount - 1, idx))
+    el.scrollTo({ left: next * el.clientWidth, behavior: 'smooth' })
+    setMediaIndex(next)
+  }
+
   // 관리자는 남의 글/댓글도 지울 수 있게 한다(행사 당일 즉시 대응용).
   const isAdmin = !isAnonymous
   const canEditPost = post.authorUid === uid
@@ -114,13 +134,43 @@ export default function PostDetail() {
 
       {isAdmin && <p className="admin-banner">관리자 모드 — 모든 글과 댓글을 지울 수 있어요</p>}
 
-      <div className="images">
-        {post.media?.map((m) =>
-          m.type === 'video' ? (
-            <video key={m.url} src={m.url} controls playsInline />
-          ) : (
-            <img key={m.url} src={m.url} alt="" />
-          )
+      {/* 여러 장은 세로로 쌓지 않고 옆으로 넘겨 본다.
+          터치 기기에서는 스와이프(scroll-snap), 그 외에는 ‹ › 버튼으로 — 두 경로 모두 제공. */}
+      <div className="media-viewer">
+        <div className="images" ref={trackRef} onScroll={handleTrackScroll}>
+          {post.media?.map((m) =>
+            m.type === 'video' ? (
+              <video key={m.url} src={m.url} controls playsInline />
+            ) : (
+              <img key={m.url} src={m.url} alt="" />
+            )
+          )}
+        </div>
+
+        {mediaCount > 1 && (
+          <>
+            <button
+              type="button"
+              className="media-nav prev"
+              onClick={() => goToMedia(mediaIndex - 1)}
+              disabled={mediaIndex === 0}
+              aria-label="이전 사진"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="media-nav next"
+              onClick={() => goToMedia(mediaIndex + 1)}
+              disabled={mediaIndex >= mediaCount - 1}
+              aria-label="다음 사진"
+            >
+              ›
+            </button>
+            <p className="media-counter">
+              {mediaIndex + 1} / {mediaCount}
+            </p>
+          </>
         )}
       </div>
 
@@ -166,12 +216,25 @@ export default function PostDetail() {
         )
       )}
 
+      {/* 사진 보러 들어온 화면이라 지도는 기본으로 접어 두고, 원할 때만 펼친다. */}
       {post.spot && (
         <div className="spot-preview">
-          <p className="hint">
-            📍 <strong>{spotLocationName}</strong>에서 찍은 사진이에요
+          <p className="hint spot-line">
+            <span>
+              📍 <strong>{spotLocationName}</strong>에서 찍은 사진이에요
+            </span>
+            <button
+              type="button"
+              className="spot-toggle-btn"
+              onClick={() => setShowSpotMap((v) => !v)}
+              aria-expanded={showSpotMap}
+            >
+              {showSpotMap ? '접기' : '정확한 위치 보기'}
+            </button>
           </p>
-          <CampusMap categories={[]} activeId={null} onSelect={() => {}} spot={post.spot} />
+          {showSpotMap && (
+            <CampusMap categories={[]} activeId={null} onSelect={() => {}} spot={post.spot} />
+          )}
         </div>
       )}
 
@@ -216,19 +279,34 @@ export default function PostDetail() {
           ))}
 
         {identity ? (
-          <form className="comment-form" onSubmit={handleAddComment}>
-            <input
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="댓글을 남겨보세요"
-            />
-            <button type="submit">등록</button>
-          </form>
+          <>
+            {/* 누구 이름으로 남기는지 쓰기 직전에 보여준다. 태블릿을 돌려 쓸 때
+                앞사람 이름으로 올라가는 걸 여기서 알아채고 바꿀 수 있다. */}
+            <p className="writing-as">
+              <span>
+                <strong>
+                  {identity.grade}-{identity.class} {identity.name}
+                </strong>{' '}
+                이름으로 남겨요
+              </span>
+              <button type="button" className="change-name-btn" onClick={() => setShowPicker(true)}>
+                바꾸기
+              </button>
+            </p>
+            <form className="comment-form" onSubmit={handleAddComment}>
+              <input
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="댓글을 남겨보세요"
+              />
+              <button type="submit">등록</button>
+            </form>
+          </>
         ) : (
           <div className="comment-locked">
-            <p className="hint">이름을 고르면 댓글을 쓸 수 있어요.</p>
+            <p className="hint">댓글에 누가 썼는지 표시하려면 이름이 필요해요.</p>
             <button type="button" className="primary" onClick={() => setShowPicker(true)}>
-              이름 고르기
+              이름 고르고 댓글 쓰기
             </button>
           </div>
         )}
@@ -236,7 +314,11 @@ export default function PostDetail() {
 
       {showPicker && (
         <IdentityPicker
-          reason="댓글에 누가 썼는지 표시하려면 이름이 필요해요."
+          reason={
+            identity
+              ? '다른 사람이 쓸 차례라면 이름을 새로 골라 주세요.'
+              : '댓글에 누가 썼는지 표시하려면 이름이 필요해요.'
+          }
           onCancel={() => setShowPicker(false)}
           onDone={() => setShowPicker(false)}
         />

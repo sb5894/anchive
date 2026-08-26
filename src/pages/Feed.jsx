@@ -20,6 +20,7 @@ export default function Feed() {
   const [posts, setPosts] = useState([])
   const [allPosts, setAllPosts] = useState([]) // 핀 숫자 배지 + 지도 위 콕 찍은 위치 표시용(필터와 무관하게 항상 전체)
   const [viewMode, setViewMode] = useState('map') // 'map' | 'list'
+  const [showHelp, setShowHelp] = useState(false)
 
   useEffect(() => subscribeLocations(setLocations), [])
 
@@ -75,20 +76,12 @@ export default function Feed() {
     <div className="page feed">
       {isAdmin && <p className="admin-banner">관리자 모드 — 모든 글과 댓글을 지울 수 있어요</p>}
       <header className="feed-header">
+        {/* 이름은 헤더에 상시 띄우지 않는다. 글·댓글을 쓰려는 순간에만 보여주고
+            거기서 바꿀 수 있게 한다(Upload/PostDetail 참고). */}
         <div className="brand">
           <h1>안성초 추억지도</h1>
           <p className="brand-sub">124주년 개교기념일 팝업 게시판</p>
         </div>
-        {/* 이름을 눌러 다시 고를 수 있게 한다. 태블릿을 여러 학생이 돌려 쓸 때
-            앞사람 이름으로 글이 올라가는 걸 막는 유일한 수단이라 꼭 필요하다. */}
-        <button
-          type="button"
-          className="whoami-btn"
-          onClick={() => setPickerIntent('name')}
-          title={identity ? '눌러서 이름 바꾸기' : undefined}
-        >
-          {identity ? `${identity.grade}-${identity.class} ${identity.name}` : '이름 고르기'}
-        </button>
       </header>
 
       <div className="map-toolbar">
@@ -114,6 +107,9 @@ export default function Feed() {
           onClick={() => setLocationId('')}
         >
           전체 보기
+        </button>
+        <button type="button" className="chip help-chip" onClick={() => setShowHelp(true)}>
+          ❓ 사용법
         </button>
       </div>
 
@@ -159,19 +155,56 @@ export default function Feed() {
         )}
       </div>
 
+      {/* 지도 확대 버튼과 헷갈리지 않도록 기호만 두지 않고 글자를 함께 넣는다. */}
       {identity ? (
-        <Link to="/upload" className="fab" aria-label="사진·동영상 올리기">
-          +
+        <Link to="/upload" className="fab">
+          ＋ 올리기
         </Link>
       ) : (
-        <button
-          type="button"
-          className="fab"
-          aria-label="사진·동영상 올리기"
-          onClick={() => setPickerIntent('upload')}
-        >
-          +
+        <button type="button" className="fab" onClick={() => setPickerIntent('upload')}>
+          ＋ 올리기
         </button>
+      )}
+
+      {showHelp && (
+        <div className="modal-backdrop" onClick={() => setShowHelp(false)}>
+          <div
+            className="modal-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="사용법"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="modal-title">이렇게 쓰면 돼요</h2>
+            <ol className="help-list">
+              <li>
+                <strong>사진 구경하기</strong>
+                <span>지도 위 사진을 누르면 크게 볼 수 있어요. 여러 장이 겹친 자리는 눌러서 펼쳐 보세요.</span>
+              </li>
+              <li>
+                <strong>장소별로 보기</strong>
+                <span>건물을 누르거나 아래 장소 이름을 누르면 그곳에서 찍은 사진만 모여요.</span>
+              </li>
+              <li>
+                <strong>지도 크게 보기</strong>
+                <span>지도 오른쪽 위 🔍＋ 🔍－ 버튼으로 지도를 크게, 작게 볼 수 있어요.</span>
+              </li>
+              <li>
+                <strong>사진 올리기</strong>
+                <span>＋ 올리기를 누르고, 사진을 찍은 자리를 지도에서 골라 주세요.</span>
+              </li>
+              <li>
+                <strong>댓글 남기기</strong>
+                <span>사진을 눌러 들어가면 좋아요를 누르고 댓글도 쓸 수 있어요.</span>
+              </li>
+            </ol>
+            <div className="modal-actions">
+              <button type="button" className="primary" onClick={() => setShowHelp(false)}>
+                알겠어요
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {pickerIntent && (
