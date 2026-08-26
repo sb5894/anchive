@@ -1,12 +1,24 @@
 :root {
-  --text: #3a3a3a;
-  --text-muted: #767676;
-  --bg: #fafafa;
+  --text: #2f3437;
+  --text-muted: #787774;
+  --bg: #fbfbfa;
   --surface: #ffffff;
-  --border: #e3e3e3;
-  --accent: #4f5fe0;
+  --surface-alt: #f7f6f3;
+  --border: #eaeaea;
+  --accent: #111111;
+  --accent-hover: #333333;
   --accent-contrast: #ffffff;
-  --danger: #d9534f;
+  --accent-soft-bg: #e1f3fe;
+  --accent-soft-text: #1f6c9f;
+  --danger: #9f2f2d;
+  --danger-soft-bg: #fdebec;
+  --warn-soft-bg: #fbf3db;
+  --warn-soft-text: #956400;
+  --like: #b8375f;
+  --like-soft-bg: #fbe8ee;
+
+  /* 텍스트 색조와 맞춘 그림자(순수 블랙 대신 웜 그레이 계열) */
+  --shadow-rgb: 47, 52, 55;
 
   /* 캠퍼스 지도 일러스트 색상 (실제 배치도 기준: 후관/본관+유치원/신관/비봉관 + 운동장/놀이터/텃밭/학교숲) */
   --map-sky-top: #dcebff;
@@ -55,9 +67,11 @@
   --map-play-area: #bfe9f0;
   --map-play-area-deco: #4a9fb0;
 
-  --sans: system-ui, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --sans: 'Plus Jakarta Sans', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
+  --serif: 'Newsreader', 'Apple SD Gothic Neo', 'Noto Sans KR', Georgia, serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'Noto Sans KR', monospace;
 
-  font: 16px/1.5 var(--sans);
+  font: 16px/1.6 var(--sans);
   color-scheme: light;
   color: var(--text);
   background: var(--bg);
@@ -70,6 +84,16 @@
 
 body {
   margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-wrap: balance;
 }
 
 #root {

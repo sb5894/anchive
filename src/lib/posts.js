@@ -13,7 +13,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
+import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { db, storage } from '../firebase'
 import { resizeImage } from './image'
 import { locationIdForSpot } from './campusRegions'
@@ -28,11 +28,13 @@ function extensionOf(filename) {
 // 이 디자인은 장소를 따로 고르지 않는다. 지도에 찍은 좌표(spot) 하나만 저장하고,
 // "어느 건물인지"는 화면에 뿌릴 때 campusRegions의 locationIdForSpot()으로 계산한다.
 // 그래야 나중에 영역 박스를 손봐도 기존 사진이 자동으로 다시 분류된다.
-export async function createPost({ eventId, spot, authorUid, authorInfo, files, caption }) {
+export async function createPost({ eventId, spot, authorUid, authorInfo, files, caption, onProgress }) {
   const postRef = doc(collection(db, 'posts'))
 
   const media = []
-  for (const file of files) {
+  const uploadedRefs = []
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
     const isVideo = file.type.startsWith('video/')
 
     if (isVideo && file.size > MAX_VIDEO_BYTES) {
@@ -45,22 +47,33 @@ export async function createPost({ eventId, spot, authorUid, authorInfo, files, 
     const path = `events/${eventId}/posts/${postRef.id}/${crypto.randomUUID()}.${ext}`
     const storageRef = ref(storage, path)
     await uploadBytes(storageRef, uploadFile)
+    uploadedRefs.push(storageRef)
     media.push({ url: await getDownloadURL(storageRef), type: isVideo ? 'video' : 'image' })
+    onProgress?.(i + 1, files.length)
   }
 
-  await setDoc(postRef, {
-    eventId,
-    // 지도에 찍은 촬영 위치. {x,y}는 지도 이미지 기준 퍼센트 좌표이고, 이 값이 분류의 유일한 근거다.
-    spot: spot || null,
-    authorUid,
-    authorInfo,
-    media,
-    caption: caption || '',
-    createdAt: serverTimestamp(),
-    likeCount: 0,
-    deleted: false,
-    history: [],
-  })
+  try {
+    await setDoc(postRef, {
+      eventId,
+      // 지도에 찍은 촬영 위치. {x,y}는 지도 이미지 기준 퍼센트 좌표이고, 이 값이 분류의 유일한 근거다.
+      spot: spot || null,
+      authorUid,
+      authorInfo,
+      media,
+      caption: caption || '',
+      createdAt: serverTimestamp(),
+      likeCount: 0,
+      deleted: false,
+      history: [],
+    })
+  } catch (err) {
+    // Firestore 저장이 실패하면 이미 올라간 파일이 고아로 남으므로 정리한다.
+    // 정리 자체가 실패해도 원래 오류(err)를 그대로 던져서 사용자에게 보여준다.
+    await Promise.all(
+      uploadedRefs.map((r) => deleteObject(r).catch((cleanupErr) => console.error('업로드 파일 정리 실패', cleanupErr)))
+    )
+    throw err
+  }
 
   return postRef.id
 }
@@ -94,6 +107,15 @@ export function subscribePost(postId, callback) {
   return onSnapshot(doc(db, 'posts', postId), (snap) => {
     callback(snap.exists() ? { id: snap.id, ...snap.data() } : null)
   })
+}
+
+// 현재 사용자가 이 게시물에 좋아요를 눌렀는지 실시간으로 알려준다(버튼 활성 표시용).
+export function subscribeLiked(postId, uid, callback) {
+  if (!uid) {
+    callback(false)
+    return () => {}
+  }
+  return onSnapshot(doc(db, 'posts', postId, 'likes', uid), (snap) => callback(snap.exists()))
 }
 
 // 좋아요 문서 쓰기와 likeCount 증감을 하나의 트랜잭션으로 묶어서, 둘 중 하나만

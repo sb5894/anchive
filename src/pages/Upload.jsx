@@ -15,6 +15,7 @@ export default function Upload() {
   const [files, setFiles] = useState([])
   const [caption, setCaption] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [progress, setProgress] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => subscribeLocations(setLocations), [])
@@ -39,6 +40,7 @@ export default function Upload() {
     }
     setSubmitting(true)
     setError('')
+    setProgress({ done: 0, total: files.length })
     try {
       const postId = await createPost({
         eventId: UNCATEGORIZED_ID,
@@ -47,6 +49,7 @@ export default function Upload() {
         authorInfo: identity,
         files,
         caption,
+        onProgress: (done, total) => setProgress({ done, total }),
       })
       navigate(`/post/${postId}`)
     } catch (err) {
@@ -54,6 +57,7 @@ export default function Upload() {
       setError(err.message || '업로드 중 문제가 발생했습니다. 다시 시도해 주세요.')
     } finally {
       setSubmitting(false)
+      setProgress(null)
     }
   }
 
@@ -108,7 +112,7 @@ export default function Upload() {
               {files.map((f, i) => (
                 <li key={`${f.name}-${f.lastModified}-${i}`}>
                   <span>
-                    {f.type.startsWith('video/') ? '🎬 ' : '🖼️ '}
+                    {f.type.startsWith('video/') ? '[VIDEO] ' : '[IMG] '}
                     {f.name}
                   </span>
                   <button
@@ -132,7 +136,11 @@ export default function Upload() {
         {error && <p className="error">{error}</p>}
 
         <button className="primary" type="submit" disabled={submitting}>
-          {submitting ? '업로드 중...' : '올리기'}
+          {submitting
+            ? progress
+              ? `${progress.total}개 중 ${progress.done}개 업로드 중...`
+              : '업로드 중...'
+            : '올리기'}
         </button>
       </form>
     </div>

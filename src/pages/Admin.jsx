@@ -83,7 +83,7 @@ export default function Admin() {
 
       {/* 실제 삭제는 지도·피드 화면에서 하므로 그쪽으로 가는 길을 크게 열어둔다 */}
       <Link to="/" className="admin-go-feed">
-        🗺️ 지도로 가서 글·댓글 관리하기
+        지도로 가서 글·댓글 관리하기
       </Link>
 
       <section className="admin-section">

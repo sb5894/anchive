@@ -6,13 +6,26 @@ const STORAGE_KEY = 'anchive_identity'
 
 const IdentityContext = createContext(null)
 
+function loadIdentity() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object' || !parsed.grade || !parsed.class || !parsed.name) {
+      throw new Error('invalid identity shape')
+    }
+    return parsed
+  } catch (err) {
+    console.error('저장된 신원 정보가 손상되어 초기화합니다', err)
+    localStorage.removeItem(STORAGE_KEY)
+    return null
+  }
+}
+
 export function IdentityProvider({ children }) {
   const [uid, setUid] = useState(null)
   const [isAnonymous, setIsAnonymous] = useState(true)
-  const [identity, setIdentityState] = useState(() => {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : null
-  })
+  const [identity, setIdentityState] = useState(loadIdentity)
   const [authReady, setAuthReady] = useState(false)
   const switchingRef = useRef(false)
 

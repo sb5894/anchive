@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
 import CampusMap from '../components/CampusMap'
+import ConfirmDialog from '../components/ConfirmDialog'
 import IdentityPicker from '../components/IdentityPicker'
 import { ETC_ID, ETC_NAME, locationIdForSpot } from '../lib/campusRegions'
 import { subscribeLocations } from '../lib/locations'
@@ -12,6 +13,7 @@ import {
   softDeleteComment,
   softDeletePost,
   subscribeComments,
+  subscribeLiked,
   subscribePost,
   toggleLike,
 } from '../lib/posts'
@@ -21,6 +23,8 @@ export default function PostDetail() {
   const navigate = useNavigate()
   const { uid, identity, isAnonymous } = useIdentity()
   const [post, setPost] = useState(null)
+  // postId별로 스냅샷을 한 번이라도 받았는지 추적한다(로딩 vs. 존재하지 않음 구분용).
+  const [checkedPostId, setCheckedPostId] = useState(null)
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
   const [editingId, setEditingId] = useState(null)
@@ -30,12 +34,35 @@ export default function PostDetail() {
   const [actionError, setActionError] = useState('')
   const [showPicker, setShowPicker] = useState(false)
   const [locations, setLocations] = useState([])
+  const [liked, setLiked] = useState(false)
+  const [liking, setLiking] = useState(false)
+  const [deletingComment, setDeletingComment] = useState(null)
+  const [confirmingPostDelete, setConfirmingPostDelete] = useState(false)
 
-  useEffect(() => subscribePost(postId, setPost), [postId])
+  useEffect(
+    () =>
+      subscribePost(postId, (data) => {
+        setPost(data)
+        setCheckedPostId(postId)
+      }),
+    [postId]
+  )
   useEffect(() => subscribeComments(postId, setComments), [postId])
   useEffect(() => subscribeLocations(setLocations), [])
+  useEffect(() => subscribeLiked(postId, uid, setLiked), [postId, uid])
 
-  if (!post) return <div className="page center">불러오는 중...</div>
+  if (checkedPostId !== postId) return <div className="page center">불러오는 중...</div>
+
+  if (!post) {
+    return (
+      <div className="page center post-not-found">
+        <p>게시물을 찾을 수 없어요.</p>
+        <Link to="/" className="primary">
+          목록으로 돌아가기
+        </Link>
+      </div>
+    )
+  }
 
   // 저장된 장소가 아니라 찍힌 좌표에서 계산한다(Feed·Upload와 같은 기준).
   const spotLocationId = post.spot ? locationIdForSpot(post.spot) : null
@@ -75,15 +102,24 @@ export default function PostDetail() {
     })
   }
 
-  async function handleDeleteComment(comment) {
-    if (!confirm('댓글을 삭제할까요?')) return
+  function handleDeleteComment(comment) {
+    setDeletingComment(comment)
+  }
+
+  async function confirmDeleteComment() {
+    const comment = deletingComment
+    setDeletingComment(null)
     await runAction(() =>
       softDeleteComment({ postId, commentId: comment.id, previousText: comment.text })
     )
   }
 
-  async function handleDeletePost() {
-    if (!confirm('게시물을 삭제할까요?')) return
+  function handleDeletePost() {
+    setConfirmingPostDelete(true)
+  }
+
+  async function confirmDeletePost() {
+    setConfirmingPostDelete(false)
     await runAction(async () => {
       await softDeletePost(postId, post.caption)
       navigate('/')
@@ -98,7 +134,13 @@ export default function PostDetail() {
   }
 
   async function handleToggleLike() {
-    await runAction(() => toggleLike(postId, uid))
+    if (liking) return
+    setLiking(true)
+    try {
+      await runAction(() => toggleLike(postId, uid))
+    } finally {
+      setLiking(false)
+    }
   }
 
   // 관리자는 남의 글/댓글도 지울 수 있게 한다(행사 당일 즉시 대응용).
@@ -130,7 +172,12 @@ export default function PostDetail() {
         <span className="author">
           {post.authorInfo?.grade}-{post.authorInfo?.class} {post.authorInfo?.name}
         </span>
-        <button className="like-btn" onClick={handleToggleLike}>
+        <button
+          className={liked ? 'like-btn active' : 'like-btn'}
+          onClick={handleToggleLike}
+          disabled={liking}
+          aria-pressed={liked}
+        >
           ♥ {post.likeCount || 0}
         </button>
         {!editingCaption && canEditPost && (
@@ -169,7 +216,7 @@ export default function PostDetail() {
       {post.spot && (
         <div className="spot-preview">
           <p className="hint">
-            📍 <strong>{spotLocationName}</strong>에서 찍은 사진이에요
+            <strong>{spotLocationName}</strong>에서 찍은 사진이에요
           </p>
           <CampusMap categories={[]} activeId={null} onSelect={() => {}} spot={post.spot} />
         </div>
@@ -239,6 +286,26 @@ export default function PostDetail() {
           reason="댓글에 누가 썼는지 표시하려면 이름이 필요해요."
           onCancel={() => setShowPicker(false)}
           onDone={() => setShowPicker(false)}
+        />
+      )}
+
+      {deletingComment && (
+        <ConfirmDialog
+          title="댓글을 삭제할까요?"
+          confirmLabel="삭제"
+          danger
+          onCancel={() => setDeletingComment(null)}
+          onConfirm={confirmDeleteComment}
+        />
+      )}
+
+      {confirmingPostDelete && (
+        <ConfirmDialog
+          title="게시물을 삭제할까요?"
+          confirmLabel="삭제"
+          danger
+          onCancel={() => setConfirmingPostDelete(false)}
+          onConfirm={confirmDeletePost}
         />
       )}
     </div>

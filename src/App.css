@@ -21,7 +21,7 @@
 }
 
 h1 {
-  font-size: 22px;
+  font-size: 26px;
   margin: 0 0 4px;
 }
 
@@ -61,14 +61,81 @@ button.primary {
   background: var(--accent);
   color: var(--accent-contrast);
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
 }
 
 button.primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+button.primary.danger {
+  background: var(--danger);
+}
+
+button.primary.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+}
+
+/* 터치 기반 UI라 눌렀을 때 반응이 바로 보여야 한다. */
+.chip,
+.toggle-btn,
+.like-btn,
+.delete-btn,
+.ghost-btn,
+.whoami-btn,
+.spot-toggle,
+.spot-clear,
+.cluster-item,
+.card-delete-btn,
+.map-zoom-controls button {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.chip:active,
+.toggle-btn:active,
+.like-btn:active:not(:disabled),
+.delete-btn:active,
+.ghost-btn:active,
+.whoami-btn:active,
+.spot-toggle:active,
+.spot-clear:active,
+.cluster-item:active,
+.card-delete-btn:active,
+.map-zoom-controls button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.post-not-found {
+  flex-direction: column;
+  gap: 16px;
+  min-height: 50vh;
+  text-align: center;
+}
+
+.post-not-found a.primary {
+  display: inline-block;
+  padding: 12px 20px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.post-not-found a.primary:hover {
+  background: var(--accent-hover);
 }
 
 /* Feed */
@@ -107,9 +174,9 @@ button.primary:disabled {
   margin: 0 0 12px;
   padding: 8px 12px;
   border-radius: 8px;
-  background: #fff4e0;
-  border: 1px solid #f0c987;
-  color: #8a5a00;
+  background: var(--warn-soft-bg);
+  border: 1px solid color-mix(in srgb, var(--warn-soft-text) 25%, transparent);
+  color: var(--warn-soft-text);
   font-size: 13px;
   font-weight: 600;
 }
@@ -132,9 +199,9 @@ button.primary:disabled {
   max-height: 85vh;
   overflow-y: auto;
   background: var(--surface);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 12px 32px rgba(var(--shadow-rgb), 0.16);
 }
 
 .modal-title {
@@ -196,11 +263,12 @@ button.primary:disabled {
   padding: 4px 8px;
   border: none;
   border-radius: 6px;
-  background: rgba(217, 83, 79, 0.92);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--danger);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 1px 4px rgba(var(--shadow-rgb), 0.2);
 }
 
 .map-toolbar {
@@ -234,7 +302,7 @@ button.primary:disabled {
 .toggle-btn.active {
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), 0.1);
 }
 
 .all-chip {
@@ -260,7 +328,7 @@ button.primary:disabled {
   position: relative;
   width: 100%;
   aspect-ratio: 2 / 3;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--map-sky);
@@ -336,8 +404,9 @@ button.primary:disabled {
   margin-top: 12px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--accent) 10%, #fff);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, #fff);
+  background: var(--accent-soft-bg);
+  border: 1px solid color-mix(in srgb, var(--accent-soft-text) 30%, transparent);
+  color: var(--accent-soft-text);
   font-size: 15px;
 }
 
@@ -361,7 +430,7 @@ button.primary:disabled {
   border: none;
   border-radius: 50%;
   background: var(--surface);
-  box-shadow: 0 0 0 3px #fff, 0 2px 6px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(var(--shadow-rgb), 0.26);
   cursor: pointer;
   overflow: visible;
   z-index: 2;
@@ -431,13 +500,13 @@ button.primary:disabled {
   width: 44px;
   height: 44px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.95);
   color: var(--text);
   font-size: 20px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.18);
 }
 
 .map-zoom-controls button:disabled {
@@ -497,9 +566,9 @@ button.primary:disabled {
 }
 
 .chip.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--accent-soft-bg);
+  border-color: color-mix(in srgb, var(--accent-soft-text) 30%, transparent);
+  color: var(--accent-soft-text);
 }
 
 .post-grid {
@@ -574,7 +643,8 @@ button.primary:disabled {
 .post-card-meta {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
   color: var(--text-muted);
   padding: 4px 2px;
 }
@@ -592,15 +662,28 @@ button.primary:disabled {
   right: max(24px, calc((100vw - 900px) / 2 + 24px));
   width: 56px;
   height: 56px;
-  border-radius: 50%;
+  border-radius: 16px;
   background: var(--accent);
   color: var(--accent-contrast);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 26px;
+  font-weight: 500;
   text-decoration: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 14px rgba(var(--shadow-rgb), 0.22);
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.fab:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.fab:active {
+  transform: scale(0.96);
 }
 
 /* Upload */
@@ -689,6 +772,17 @@ button.primary:disabled {
   cursor: pointer;
 }
 
+.like-btn.active {
+  background: var(--like-soft-bg);
+  border-color: color-mix(in srgb, var(--like) 35%, transparent);
+  color: var(--like);
+}
+
+.like-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .caption {
   margin-bottom: 20px;
   white-space: pre-wrap;
@@ -709,7 +803,8 @@ button.primary:disabled {
 }
 
 .comment-author {
-  font-size: 13px;
+  font-family: var(--mono);
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -762,11 +857,16 @@ button.primary:disabled {
 
 .comment-form button {
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: none;
   background: var(--accent);
   color: var(--accent-contrast);
   cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.comment-form button:hover {
+  background: var(--accent-hover);
 }
 
 /* Admin */
@@ -781,12 +881,17 @@ button.primary:disabled {
   display: block;
   margin-bottom: 20px;
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--accent);
   color: var(--accent-contrast);
-  font-weight: 700;
+  font-weight: 600;
   text-align: center;
   text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.admin-go-feed:hover {
+  background: var(--accent-hover);
 }
 
 .admin-section {
@@ -823,7 +928,8 @@ button.primary:disabled {
 }
 
 .log-item > span:first-child {
-  font-size: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
 }

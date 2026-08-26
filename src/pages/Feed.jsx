@@ -5,6 +5,7 @@ import { subscribeLocations } from '../lib/locations'
 import { subscribeFeedByLocation, softDeletePost } from '../lib/posts'
 import PostCard from '../components/PostCard'
 import CampusMap from '../components/CampusMap'
+import ConfirmDialog from '../components/ConfirmDialog'
 import IdentityPicker from '../components/IdentityPicker'
 import { ETC_ID, ETC_NAME, locationIdForSpot } from '../lib/campusRegions'
 
@@ -17,18 +18,21 @@ export default function Feed() {
   const [pickerIntent, setPickerIntent] = useState(null)
   const [locations, setLocations] = useState([])
   const [locationId, setLocationId] = useState('')
-  const [posts, setPosts] = useState([])
-  const [allPosts, setAllPosts] = useState([]) // 핀 숫자 배지 + 지도 위 콕 찍은 위치 표시용(필터와 무관하게 항상 전체)
+  // 전체 게시물 하나만 구독하고, 통계(counts)와 화면 표시(posts) 모두 여기서 계산한다.
+  const [allPosts, setAllPosts] = useState([])
   const [viewMode, setViewMode] = useState('map') // 'map' | 'list'
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => subscribeLocations(setLocations), [])
 
-  useEffect(() => {
-    const unsub = subscribeFeedByLocation(locationId || null, setPosts)
-    return unsub
-  }, [locationId])
-
   useEffect(() => subscribeFeedByLocation(null, setAllPosts), [])
+
+  const posts = useMemo(
+    () =>
+      locationId ? allPosts.filter((p) => locationIdForSpot(p.spot) === locationId) : allPosts,
+    [allPosts, locationId]
+  )
 
   // 어느 건물에도 안 걸치는 자리(통로·나무 등)에 찍힌 사진을 모아 보는 칸
   const categories = useMemo(() => [...locations, { id: ETC_ID, name: ETC_NAME }], [locations])
@@ -61,19 +65,26 @@ export default function Feed() {
     [allPosts]
   )
 
-  async function handleAdminDelete(post) {
-    if (!confirm('이 게시물을 삭제할까요? (관리자 로그에 기록이 남아요)')) return
+  function handleAdminDelete(post) {
+    setDeleteError('')
+    setDeleteTarget(post)
+  }
+
+  async function confirmAdminDelete() {
+    const post = deleteTarget
+    setDeleteTarget(null)
     try {
       await softDeletePost(post.id, post.caption)
     } catch (err) {
       console.error(err)
-      alert('삭제하지 못했어요. 다시 시도해 주세요.')
+      setDeleteError('삭제하지 못했어요. 다시 시도해 주세요.')
     }
   }
 
   return (
     <div className="page feed">
       {isAdmin && <p className="admin-banner">관리자 모드 — 모든 글과 댓글을 지울 수 있어요</p>}
+      {deleteError && <p className="error">{deleteError}</p>}
       <header className="feed-header">
         <div className="brand">
           <h1>안성초 추억지도</h1>
@@ -98,14 +109,14 @@ export default function Feed() {
             className={viewMode === 'map' ? 'toggle-btn active' : 'toggle-btn'}
             onClick={() => setViewMode('map')}
           >
-            🗺️ 지도
+            지도
           </button>
           <button
             type="button"
             className={viewMode === 'list' ? 'toggle-btn active' : 'toggle-btn'}
             onClick={() => setViewMode('list')}
           >
-            📋 목록
+            목록
           </button>
         </div>
         <button
@@ -189,6 +200,17 @@ export default function Feed() {
             setPickerIntent(null)
             if (intent === 'upload') navigate('/upload')
           }}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title="이 게시물을 삭제할까요?"
+          message="관리자 로그에 기록이 남아요."
+          confirmLabel="삭제"
+          danger
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={confirmAdminDelete}
         />
       )}
     </div>
