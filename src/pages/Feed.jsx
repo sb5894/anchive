@@ -8,6 +8,7 @@ import CampusMap from '../components/CampusMap'
 import ConfirmDialog from '../components/ConfirmDialog'
 import IdentityPicker from '../components/IdentityPicker'
 import { ETC_ID, ETC_NAME, locationIdForSpot } from '../lib/campusRegions'
+import { GridIcon, HelpIcon, ListIcon, MapIcon } from '../components/icons'
 
 export default function Feed() {
   const navigate = useNavigate()
@@ -102,6 +103,7 @@ export default function Feed() {
             className={viewMode === 'map' ? 'toggle-btn active' : 'toggle-btn'}
             onClick={() => setViewMode('map')}
           >
+            <MapIcon />
             지도
           </button>
           <button
@@ -109,6 +111,7 @@ export default function Feed() {
             className={viewMode === 'list' ? 'toggle-btn active' : 'toggle-btn'}
             onClick={() => setViewMode('list')}
           >
+            <ListIcon />
             목록
           </button>
         </div>
@@ -117,9 +120,11 @@ export default function Feed() {
           className={locationId === '' ? 'chip all-chip active' : 'chip all-chip'}
           onClick={() => setLocationId('')}
         >
+          <GridIcon size={18} />
           전체 보기
         </button>
         <button type="button" className="chip help-chip" onClick={() => setShowHelp(true)}>
+          <HelpIcon size={18} />
           사용법
         </button>
       </div>

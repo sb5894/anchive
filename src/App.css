@@ -38,7 +38,7 @@ h1 {
 }
 
 .field label {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
 }
 
@@ -162,7 +162,7 @@ button.primary.danger:hover:not(:disabled) {
 }
 
 .brand-sub {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
   margin: 4px 0 0;
 }
@@ -228,7 +228,7 @@ button.primary.danger:hover:not(:disabled) {
 }
 
 .modal-sub {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-muted);
   margin: 0 0 16px;
 }
@@ -304,6 +304,18 @@ button.primary.danger:hover:not(:disabled) {
   background: var(--border);
 }
 
+/* 아이콘과 글자를 나란히 놓기 위한 공통 정렬 */
+.toggle-btn,
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ui-icon {
+  flex: none;
+}
+
 .toggle-btn {
   min-height: 38px;
   padding: 8px 14px;
@@ -311,7 +323,7 @@ button.primary.danger:hover:not(:disabled) {
   border: none;
   background: transparent;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -327,7 +339,7 @@ button.primary.danger:hover:not(:disabled) {
   min-height: 38px;
   margin: 0;
   padding: 8px 14px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -337,7 +349,7 @@ button.primary.danger:hover:not(:disabled) {
 }
 
 .map-help {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-muted);
   margin: 0 0 10px;
 }
@@ -351,6 +363,9 @@ button.primary.danger:hover:not(:disabled) {
   border: 1px solid var(--border);
   background: var(--map-sky);
   margin-bottom: 4px;
+  /* 손가락 확대·이동을 앱이 직접 처리하므로 브라우저 기본 제스처를 막는다.
+     (브라우저 확대는 사진 묶음을 풀어주지 못해서 지도용으로는 쓸 수 없다) */
+  touch-action: none;
 }
 
 .campus-map-wrap.pickable {
@@ -391,10 +406,11 @@ button.primary.danger:hover:not(:disabled) {
 }
 
 /* 확대/축소되는 레이어. 지도 그림과 그 위 요소들이 함께 커진다. */
+/* 확대·이동 계산을 단순하게 하려고 기준점을 왼쪽 위로 둔다. */
 .campus-map-zoomer {
   position: absolute;
   inset: 0;
-  transform-origin: center center;
+  transform-origin: 0 0;
   transition: transform 0.2s ease-out;
 }
 
@@ -561,7 +577,7 @@ button.primary.danger:hover:not(:disabled) {
 }
 
 .current-category {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   margin: 4px 0 12px;
   color: var(--text);
@@ -665,7 +681,7 @@ button.primary.danger:hover:not(:disabled) {
   display: flex;
   justify-content: space-between;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-muted);
   padding: 4px 2px;
 }
@@ -714,7 +730,7 @@ button.primary.danger:hover:not(:disabled) {
 
 /* Upload */
 .hint {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-muted);
   margin: 4px 0 0;
 }
@@ -737,7 +753,7 @@ button.primary.danger:hover:not(:disabled) {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .file-list li span {
@@ -757,7 +773,7 @@ button.primary.danger:hover:not(:disabled) {
 
 .error {
   color: var(--danger);
-  font-size: 14px;
+  font-size: 15px;
   margin: 0 0 12px;
 }
 
@@ -836,7 +852,7 @@ button.primary.danger:hover:not(:disabled) {
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -857,7 +873,7 @@ button.primary.danger:hover:not(:disabled) {
   border-radius: 999px;
   background: var(--surface);
   color: var(--text);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -874,7 +890,7 @@ button.primary.danger:hover:not(:disabled) {
   border-radius: 10px;
   background: var(--surface-alt);
   border: 1px solid var(--border);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .help-chip {
@@ -902,7 +918,7 @@ button.primary.danger:hover:not(:disabled) {
 }
 
 .help-list span {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
   line-height: 1.45;
 }

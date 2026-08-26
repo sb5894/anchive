@@ -39,21 +39,131 @@ function clusterSpots(spots, zoom) {
   return clusters
 }
 
+// 확대한 만큼 지도가 틀 밖으로 밀려나지 않도록 이동량을 가둔다.
+// transform-origin이 0 0이라 배율 s일 때 왼쪽 위는 0, 오른쪽 아래는 -(s-1)*크기가 한계다.
+function clampPan(tx, ty, scale, rect) {
+  const minX = -(scale - 1) * rect.width
+  const minY = -(scale - 1) * rect.height
+  return {
+    tx: Math.min(0, Math.max(minX, tx)),
+    ty: Math.min(0, Math.max(minY, ty)),
+  }
+}
+
 export default function CampusMap({ categories, activeId, onSelect, spots, spot, onMapClick }) {
   const navigate = useNavigate()
   const wrapRef = useRef(null)
-  const [zoom, setZoom] = useState(MIN_ZOOM)
+  // scale과 이동량(tx,ty)을 함께 관리한다. 버튼 확대와 손가락 확대가 같은 상태를 공유한다.
+  const [view, setView] = useState({ scale: MIN_ZOOM, tx: 0, ty: 0 })
   const [openCluster, setOpenCluster] = useState(null)
+  const zoom = view.scale
+
+  // 진행 중인 손가락들과 제스처 시작 시점의 상태를 담아둔다(렌더와 무관하므로 ref).
+  const pointersRef = useRef(new Map())
+  const gestureRef = useRef(null)
+  const movedRef = useRef(false)
+  // 손가락으로 조작하는 중인지. 전환 효과를 끄는 판단에 쓰이므로 ref가 아니라 상태여야 한다.
+  const [gesturing, setGesturing] = useState(false)
 
   const allSpots = spots || (spot ? [{ id: 'single', x: spot.x, y: spot.y }] : [])
   const clusters = useMemo(() => clusterSpots(allSpots, zoom), [allSpots, zoom])
 
+  // 버튼 확대는 보이는 화면의 한가운데를 기준으로 키운다(구석으로 튀지 않게).
+  function zoomBy(delta) {
+    const rect = wrapRef.current?.getBoundingClientRect()
+    if (!rect) return
+    setView((v) => {
+      const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, v.scale + delta))
+      const k = next / v.scale
+      const cx = rect.width / 2
+      const cy = rect.height / 2
+      const raw = { tx: cx - (cx - v.tx) * k, ty: cy - (cy - v.ty) * k }
+      return { scale: next, ...clampPan(raw.tx, raw.ty, next, rect) }
+    })
+  }
+
+  function pointerList() {
+    return [...pointersRef.current.values()]
+  }
+
+  function handlePointerDown(e) {
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    movedRef.current = false
+    setGesturing(true)
+    const pts = pointerList()
+    const rect = wrapRef.current.getBoundingClientRect()
+    if (pts.length === 1) {
+      gestureRef.current = { mode: 'pan', startX: pts[0].x, startY: pts[0].y, view, rect }
+    } else if (pts.length === 2) {
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y)
+      gestureRef.current = {
+        mode: 'pinch',
+        startDist: dist || 1,
+        midX: (pts[0].x + pts[1].x) / 2 - rect.left,
+        midY: (pts[0].y + pts[1].y) / 2 - rect.top,
+        view,
+        rect,
+      }
+    }
+    // 포인터가 이미 놓였거나 요소가 사라진 경우 예외가 날 수 있는데,
+    // 붙잡기에 실패해도 제스처 자체는 동작하므로 조용히 넘어간다.
+    try {
+      e.currentTarget.setPointerCapture?.(e.pointerId)
+    } catch {
+      /* 붙잡기 실패는 무시 */
+    }
+  }
+
+  function handlePointerMove(e) {
+    if (!pointersRef.current.has(e.pointerId)) return
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    const g = gestureRef.current
+    if (!g) return
+    const pts = pointerList()
+
+    if (g.mode === 'pinch' && pts.length >= 2) {
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y)
+      const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, g.view.scale * (dist / g.startDist)))
+      const k = next / g.view.scale
+      // 두 손가락 사이 지점이 제자리에 있도록 이동량을 함께 보정한다.
+      const raw = {
+        tx: g.midX - (g.midX - g.view.tx) * k,
+        ty: g.midY - (g.midY - g.view.ty) * k,
+      }
+      movedRef.current = true
+      setView({ scale: next, ...clampPan(raw.tx, raw.ty, next, g.rect) })
+    } else if (g.mode === 'pan' && pts.length === 1) {
+      const dx = pts[0].x - g.startX
+      const dy = pts[0].y - g.startY
+      if (Math.hypot(dx, dy) > 6) movedRef.current = true
+      setView((v) => ({
+        scale: v.scale,
+        ...clampPan(g.view.tx + dx, g.view.ty + dy, v.scale, g.rect),
+      }))
+    }
+  }
+
+  function handlePointerUp(e) {
+    pointersRef.current.delete(e.pointerId)
+    if (pointersRef.current.size === 0) {
+      gestureRef.current = null
+      setGesturing(false)
+    }
+  }
+
   function handleWrapClick(e) {
+    // 끌어서 이동한 직후의 클릭은 위치 찍기로 보지 않는다.
+    if (movedRef.current) return
     if (!onMapClick) return
     if (e.target.closest('.map-spot') || e.target.closest('.map-region')) return
     const rect = e.currentTarget.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
-    const y = ((e.clientY - rect.top) / rect.height) * 100
+    // 확대·이동을 되돌려 원래 그림 기준 좌표로 변환한다.
+    // (이 보정이 없으면 확대한 상태에서 엉뚱한 자리에 찍혔다.)
+    const px = (e.clientX - rect.left - view.tx) / view.scale
+    const py = (e.clientY - rect.top - view.ty) / view.scale
+    const x = (px / rect.width) * 100
+    const y = (py / rect.height) * 100
+    if (x < 0 || x > 100 || y < 0 || y > 100) return
     onMapClick({ x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 })
   }
 
@@ -72,8 +182,19 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
         ref={wrapRef}
         className={onMapClick ? 'campus-map-wrap pickable' : 'campus-map-wrap'}
         onClick={handleWrapClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
-        <div className="campus-map-zoomer" style={{ transform: `scale(${zoom})` }}>
+        <div
+          className="campus-map-zoomer"
+          style={{
+            transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`,
+            // 손가락으로 조작하는 동안에는 전환 효과를 꺼야 끌리는 느낌 없이 따라온다.
+            transition: gesturing ? 'none' : undefined,
+          }}
+        >
           <img className="campus-map-illustration" src="/campus-map-2.png" alt="" aria-hidden="true" />
 
 
@@ -137,7 +258,7 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
           <div className="map-zoom-controls">
             <button
               type="button"
-              onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP))}
+              onClick={() => zoomBy(ZOOM_STEP)}
               disabled={zoom >= MAX_ZOOM}
               aria-label="지도 크게 보기"
             >
@@ -145,7 +266,7 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
             </button>
             <button
               type="button"
-              onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP))}
+              onClick={() => zoomBy(-ZOOM_STEP)}
               disabled={zoom <= MIN_ZOOM}
               aria-label="지도 작게 보기"
             >

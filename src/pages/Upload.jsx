@@ -19,6 +19,7 @@ export default function Upload() {
   const [progress, setProgress] = useState(null)
   const [error, setError] = useState('')
   const [showPicker, setShowPicker] = useState(false)
+  const [showMap, setShowMap] = useState(false)
 
   useEffect(() => subscribeLocations(setLocations), [])
 
@@ -32,12 +33,15 @@ export default function Upload() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!spot) {
-      setError('사진을 찍은 위치를 지도에서 골라 주세요.')
-      return
-    }
+    // 화면 순서(사진 → 위치)대로 안내해야 어디를 고쳐야 할지 헷갈리지 않는다.
     if (!files.length) {
       setError('올릴 사진이나 동영상을 선택해 주세요.')
+      return
+    }
+    if (!spot) {
+      setError('사진을 찍은 위치를 지도에서 골라 주세요.')
+      // 접혀 있으면 펼쳐 줘야 무엇을 해야 하는지 바로 보인다.
+      setShowMap(true)
       return
     }
     setSubmitting(true)
@@ -69,35 +73,6 @@ export default function Upload() {
 
       <form onSubmit={handleSubmit}>
         <div className="field">
-          <label>사진을 찍은 곳</label>
-          <p className="hint">지도에서 사진을 찍은 자리를 눌러 주세요.</p>
-          <CampusMap categories={locations} activeId={null} onSelect={() => {}} spot={spot} onMapClick={setSpot} />
-
-          {/* 지도 탭과 완전히 동등한 또 하나의 입력 수단. 고르면 그 구역 한가운데에 찍힌다. */}
-          <p className="hint pick-list-title">정해진 장소에서 고르기</p>
-          <div className="event-filter">
-            {locations.map((loc) => (
-              <button
-                key={loc.id}
-                type="button"
-                className={pickedLocationId === loc.id ? 'chip active' : 'chip'}
-                onClick={() => setSpot(regionCenter(loc.id))}
-              >
-                {loc.name}
-              </button>
-            ))}
-          </div>
-
-          {spot ? (
-            <p className="picked-where">
-              지금 고른 곳: <strong>{pickedLocationName}</strong>
-            </p>
-          ) : (
-            <p className="picked-where empty-where">아직 위치를 고르지 않았어요</p>
-          )}
-        </div>
-
-        <div className="field">
           <label>사진·동영상 (여러 개 선택 가능, 동영상은 50MB까지)</label>
           <input
             type="file"
@@ -128,6 +103,55 @@ export default function Upload() {
             </ul>
           )}
           {files.length > 0 && <p className="hint">{files.length}개 선택됨 — 더 고르려면 다시 눌러주세요</p>}
+        </div>
+
+        {/* 사진을 고른 다음 위치를 정하는 순서. 지도는 자리를 많이 차지해서 기본은 접어 둔다. */}
+        <div className="field">
+          <label>사진을 찍은 곳</label>
+          <button
+            type="button"
+            className="spot-toggle"
+            onClick={() => setShowMap((v) => !v)}
+            aria-expanded={showMap}
+          >
+            {showMap ? '지도 접기' : '위치 선택하기'}
+          </button>
+
+          {showMap && (
+            <>
+              <p className="hint">지도에서 사진을 찍은 자리를 눌러 주세요.</p>
+              <CampusMap
+                categories={locations}
+                activeId={null}
+                onSelect={() => {}}
+                spot={spot}
+                onMapClick={setSpot}
+              />
+
+              {/* 지도 탭과 완전히 동등한 또 하나의 입력 수단. 고르면 그 구역 한가운데에 찍힌다. */}
+              <p className="hint pick-list-title">정해진 장소에서 고르기</p>
+              <div className="event-filter">
+                {locations.map((loc) => (
+                  <button
+                    key={loc.id}
+                    type="button"
+                    className={pickedLocationId === loc.id ? 'chip active' : 'chip'}
+                    onClick={() => setSpot(regionCenter(loc.id))}
+                  >
+                    {loc.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {spot ? (
+            <p className="picked-where">
+              지금 고른 곳: <strong>{pickedLocationName}</strong>
+            </p>
+          ) : (
+            <p className="picked-where empty-where">아직 위치를 고르지 않았어요</p>
+          )}
         </div>
 
         <div className="field">

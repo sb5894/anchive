@@ -86,7 +86,8 @@
   --serif: 'MaruBuri', 'Apple SD Gothic Neo', 'Noto Serif KR', Georgia, serif;
   --mono: 'JetBrains Mono', ui-monospace, 'Noto Sans KR', monospace;
 
-  font: 16px/1.6 var(--sans);
+  /* 초등학생이 주 사용자라 기본 본문을 조금 키웠다(16 → 17px). */
+  font: 17px/1.6 var(--sans);
   color-scheme: light;
   color: var(--text);
   background: var(--bg);
