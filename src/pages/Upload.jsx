@@ -6,6 +6,7 @@ import { subscribeLocations } from '../lib/locations'
 import { createPost } from '../lib/posts'
 import { ETC_ID, ETC_NAME, locationIdForSpot, regionCenter } from '../lib/campusRegions'
 import CampusMap from '../components/CampusMap'
+import IdentityPicker from '../components/IdentityPicker'
 
 export default function Upload() {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export default function Upload() {
   const [submitting, setSubmitting] = useState(false)
   const [progress, setProgress] = useState(null)
   const [error, setError] = useState('')
+  const [showPicker, setShowPicker] = useState(false)
 
   useEffect(() => subscribeLocations(setLocations), [])
 
@@ -135,6 +137,21 @@ export default function Upload() {
 
         {error && <p className="error">{error}</p>}
 
+        {/* 누구 이름으로 올리는지 올리기 직전에 보여주고, 여기서 바로 바꿀 수 있게 한다. */}
+        {identity && (
+          <p className="writing-as">
+            <span>
+              <strong>
+                {identity.grade}-{identity.class} {identity.name}
+              </strong>{' '}
+              이름으로 올려요
+            </span>
+            <button type="button" className="change-name-btn" onClick={() => setShowPicker(true)}>
+              바꾸기
+            </button>
+          </p>
+        )}
+
         <button className="primary" type="submit" disabled={submitting}>
           {submitting
             ? progress
@@ -143,6 +160,14 @@ export default function Upload() {
             : '올리기'}
         </button>
       </form>
+
+      {showPicker && (
+        <IdentityPicker
+          reason="다른 사람이 쓸 차례라면 이름을 새로 골라 주세요."
+          onCancel={() => setShowPicker(false)}
+          onDone={() => setShowPicker(false)}
+        />
+      )}
     </div>
   )
 }

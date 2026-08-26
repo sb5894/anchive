@@ -6,11 +6,21 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#fbfbfa" />
+    <!-- 한글 사이트인데 Newsreader·Plus Jakarta Sans에는 한글 글리프가 없어 전부 대체
+         글꼴로 빠지고 있었다. 제목은 마루 부리(index.css에서 @font-face 선언),
+         본문·UI는 Pretendard 가변 동적 서브셋(실제 쓰인 글자 조각만 내려받음)으로 교체.
+         숫자용 JetBrains Mono는 기존 디자인 톤 유지를 위해 남겨둔다. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://hangeul.pstatic.net" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
     />
     <title>안성초 추억지도</title>
   </head>
