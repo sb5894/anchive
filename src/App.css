@@ -95,6 +95,7 @@ button.primary.danger:hover:not(:disabled) {
 .spot-clear,
 .cluster-item,
 .card-delete-btn,
+.place-item,
 .map-zoom-controls button {
   transition:
     background-color 0.15s ease,
@@ -113,6 +114,7 @@ button.primary.danger:hover:not(:disabled) {
 .spot-clear:active,
 .cluster-item:active,
 .card-delete-btn:active,
+.place-item:active,
 .map-zoom-controls button:active:not(:disabled) {
   transform: scale(0.96);
 }
@@ -316,10 +318,25 @@ button.primary.danger:hover:not(:disabled) {
   }
 
   .toggle-btn,
-  .all-chip,
+  .place-chip,
   .help-chip {
     font-size: 14px;
   }
+}
+
+/* 장소 필터는 '보기 방식'(지도/모아 보기)과 성격이 달라 툴바에서 한 줄 아래로 뺐다. */
+.place-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.place-chip {
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .view-toggle {
@@ -359,15 +376,6 @@ button.primary.danger:hover:not(:disabled) {
   background: var(--surface);
   color: var(--text);
   box-shadow: 0 1px 3px rgba(var(--shadow-rgb), 0.1);
-}
-
-.all-chip {
-  min-height: 38px;
-  margin: 0;
-  padding: 8px 14px;
-  font-size: 15px;
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 .map-section {
@@ -602,11 +610,45 @@ button.primary.danger:hover:not(:disabled) {
   display: block;
 }
 
-.current-category {
-  font-size: 15px;
-  font-weight: 600;
-  margin: 4px 0 12px;
+/* 장소 고르기 모달 안의 세로 목록 */
+.place-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.place-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
   color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.place-item.active {
+  background: var(--accent-soft-bg);
+  border-color: color-mix(in srgb, var(--accent-soft-text) 30%, transparent);
+  color: var(--accent-soft-text);
+}
+
+.place-item-count {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.place-item.active .place-item-count {
+  color: inherit;
 }
 
 .event-filter {
@@ -634,22 +676,20 @@ button.primary.danger:hover:not(:disabled) {
   color: var(--accent-soft-text);
 }
 
+/* 인스타처럼 사진이 서로 붙고 화면 끝까지 닿게 한다. .page의 좌우 여백을 상쇄. */
 .post-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-}
-
-@media (min-width: 600px) {
-  .post-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-left: -16px;
+  margin-right: -16px;
 }
 
 @media (min-width: 900px) {
   .post-grid {
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 
@@ -662,8 +702,8 @@ button.primary.danger:hover:not(:disabled) {
 .post-card-image {
   position: relative;
   aspect-ratio: 1;
-  background: var(--border);
-  border-radius: 4px;
+  background: var(--surface-alt);
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -703,20 +743,11 @@ button.primary.danger:hover:not(:disabled) {
   pointer-events: none;
 }
 
-.post-card-meta {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--text-muted);
-  padding: 4px 2px;
-}
-
 .empty {
   grid-column: 1 / -1;
   text-align: center;
   color: var(--text-muted);
-  padding: 40px 0;
+  padding: 40px 16px;
 }
 
 /* 기호만 있으면 지도 확대(＋)와 구분이 안 돼서, 글자를 넣은 알약형으로 바꿨다. */
@@ -820,10 +851,14 @@ button.primary.danger:hover:not(:disabled) {
 
 .images {
   display: flex;
+  /* 기본값 stretch 때문에 가로 사진이 세로 사진 높이에 맞춰 늘어나 찌그러졌다. */
+  align-items: center;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   border-radius: 8px;
+  /* 비율이 다른 사진은 위아래에 여백이 생기므로 배경을 깔아 의도한 여백으로 보이게 한다. */
+  background: var(--surface-alt);
 }
 
 .images::-webkit-scrollbar {
@@ -834,6 +869,11 @@ button.primary.danger:hover:not(:disabled) {
 .images video {
   flex: 0 0 100%;
   width: 100%;
+  height: auto;
+  /* 세로로 아주 긴 사진이 화면을 다 먹지 않도록 상한을 둔다. */
+  max-height: 70vh;
+  /* max-height가 걸렸을 때도 비율을 억지로 바꾸지 않는다. */
+  object-fit: contain;
   scroll-snap-align: center;
   border-radius: 8px;
   display: block;

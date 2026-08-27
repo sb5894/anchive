@@ -61,7 +61,7 @@ export default function PostDetail() {
       <div className="page center post-not-found">
         <p>게시물을 찾을 수 없어요.</p>
         <Link to="/" className="primary">
-          목록으로 돌아가기
+          지도로 돌아가기
         </Link>
       </div>
     )

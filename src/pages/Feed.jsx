@@ -8,7 +8,7 @@ import CampusMap from '../components/CampusMap'
 import ConfirmDialog from '../components/ConfirmDialog'
 import IdentityPicker from '../components/IdentityPicker'
 import { ETC_ID, ETC_NAME, locationIdForSpot } from '../lib/campusRegions'
-import { GridIcon, HelpIcon, ListIcon, MapIcon } from '../components/icons'
+import { GridIcon, HelpIcon, MapIcon } from '../components/icons'
 
 export default function Feed() {
   const navigate = useNavigate()
@@ -21,10 +21,11 @@ export default function Feed() {
   const [locationId, setLocationId] = useState('')
   // 전체 게시물 하나만 구독하고, 통계(counts)와 화면 표시(posts) 모두 여기서 계산한다.
   const [allPosts, setAllPosts] = useState([])
-  const [viewMode, setViewMode] = useState('map') // 'map' | 'list'
+  const [viewMode, setViewMode] = useState('map') // 'map' | 'grid'
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteError, setDeleteError] = useState('')
   const [showHelp, setShowHelp] = useState(false)
+  const [showPlacePicker, setShowPlacePicker] = useState(false)
 
   useEffect(() => subscribeLocations(setLocations), [])
 
@@ -54,9 +55,10 @@ export default function Feed() {
     return map
   }, [allPosts])
 
+  // 지도 위 사진 핀도 지금 고른 장소만 남긴다(전체를 볼 때는 posts === allPosts).
   const mapSpots = useMemo(
     () =>
-      allPosts
+      posts
         .filter((p) => p.spot)
         .map((p) => ({
           id: p.id,
@@ -64,7 +66,7 @@ export default function Feed() {
           y: p.spot.y,
           thumbUrl: p.media?.[0]?.url,
         })),
-    [allPosts]
+    [posts]
   )
 
   function handleAdminDelete(post) {
@@ -108,31 +110,42 @@ export default function Feed() {
           </button>
           <button
             type="button"
-            className={viewMode === 'list' ? 'toggle-btn active' : 'toggle-btn'}
-            onClick={() => setViewMode('list')}
+            className={viewMode === 'grid' ? 'toggle-btn active' : 'toggle-btn'}
+            onClick={() => setViewMode('grid')}
           >
-            <ListIcon />
-            목록
+            <GridIcon />
+            모아 보기
           </button>
         </div>
-        <button
-          type="button"
-          className={locationId === '' ? 'chip all-chip active' : 'chip all-chip'}
-          onClick={() => setLocationId('')}
-        >
-          <GridIcon size={18} />
-          전체 보기
-        </button>
         <button type="button" className="chip help-chip" onClick={() => setShowHelp(true)}>
           <HelpIcon size={18} />
           사용법
         </button>
       </div>
 
+      {/* 장소 필터는 '보기 방식'과 성격이 달라 따로 두고, 지도 뷰·모아 보기 뷰 모두에 보여준다. */}
+      <div className="place-bar">
+        <button
+          type="button"
+          className={locationId === '' ? 'chip place-chip active' : 'chip place-chip'}
+          onClick={() => setLocationId('')}
+        >
+          전체 장소
+        </button>
+        <button
+          type="button"
+          className={locationId ? 'chip place-chip active' : 'chip place-chip'}
+          onClick={() => setShowPlacePicker(true)}
+          aria-haspopup="dialog"
+        >
+          {locationId ? currentCategoryName : '장소 선택'} ▾
+        </button>
+      </div>
+
       {viewMode === 'map' ? (
         <div className="map-section">
           <p className="map-help">
-            사진을 눌러 구경하고, 건물이나 아래 장소 이름을 눌러 골라 보세요.
+            사진을 눌러 구경하고, 건물이나 위쪽 &lsquo;장소 선택&rsquo;을 눌러 골라 보세요.
           </p>
           <CampusMap
             categories={locations}
@@ -144,32 +157,20 @@ export default function Feed() {
         </div>
       ) : null}
 
-      <div className="event-filter">
-        {categories.map((c) => (
-          <button
-            key={c.id}
-            className={locationId === c.id ? 'chip active' : 'chip'}
-            onClick={() => setLocationId(c.id)}
-          >
-            {c.name} {counts[c.id] ? `(${counts[c.id]})` : ''}
-          </button>
-        ))}
-      </div>
-
-      <p className="current-category">지금 보는 장소: {currentCategoryName}</p>
-
-      <div className="post-grid">
-        {posts.map((p) => (
-          <PostCard key={p.id} post={p} onAdminDelete={isAdmin ? handleAdminDelete : undefined} />
-        ))}
-        {posts.length === 0 && (
-          <p className="empty">
-            {locationId
-              ? '이 장소에는 아직 사진이 없어요. 다른 장소를 눌러보세요.'
-              : '아직 올라온 사진이 없어요.'}
-          </p>
-        )}
-      </div>
+      {viewMode === 'grid' ? (
+        <div className="post-grid">
+          {posts.map((p) => (
+            <PostCard key={p.id} post={p} onAdminDelete={isAdmin ? handleAdminDelete : undefined} />
+          ))}
+          {posts.length === 0 && (
+            <p className="empty">
+              {locationId
+                ? '이 장소에는 아직 사진이 없어요. 다른 장소를 눌러보세요.'
+                : '아직 올라온 사진이 없어요.'}
+            </p>
+          )}
+        </div>
+      ) : null}
 
       {/* 지도 확대 버튼과 헷갈리지 않도록 기호만 두지 않고 글자를 함께 넣는다. */}
       {identity ? (
@@ -197,11 +198,14 @@ export default function Feed() {
                 <strong>사진 구경하기</strong>
                 <span>
                   지도 위 사진을 누르면 크게 볼 수 있어요. 여러 장이 겹친 자리는 눌러서 펼쳐 보세요.
+                  &lsquo;모아 보기&rsquo;를 누르면 사진만 한눈에 볼 수 있어요.
                 </span>
               </li>
               <li>
                 <strong>장소별로 보기</strong>
-                <span>건물을 누르거나 아래 장소 이름을 누르면 그곳에서 찍은 사진만 모여요.</span>
+                <span>
+                  건물을 누르거나 위쪽 &lsquo;장소 선택&rsquo;을 누르면 그곳에서 찍은 사진만 모여요.
+                </span>
               </li>
               <li>
                 <strong>지도 크게 보기</strong>
@@ -219,6 +223,42 @@ export default function Feed() {
             <div className="modal-actions">
               <button type="button" className="primary" onClick={() => setShowHelp(false)}>
                 알겠어요
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPlacePicker && (
+        <div className="modal-backdrop" onClick={() => setShowPlacePicker(false)}>
+          <div
+            className="modal-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="장소 고르기"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="modal-title">장소 고르기</h2>
+            <p className="modal-sub">사진을 찍은 곳을 눌러 보세요.</p>
+            <div className="place-list">
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={locationId === c.id ? 'place-item active' : 'place-item'}
+                  onClick={() => {
+                    setLocationId(c.id)
+                    setShowPlacePicker(false)
+                  }}
+                >
+                  <span className="place-item-name">{c.name}</span>
+                  <span className="place-item-count">{counts[c.id] || 0}</span>
+                </button>
+              ))}
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="primary" onClick={() => setShowPlacePicker(false)}>
+                닫기
               </button>
             </div>
           </div>
