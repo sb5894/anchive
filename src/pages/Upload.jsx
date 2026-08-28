@@ -20,6 +20,8 @@ export default function Upload() {
   const [error, setError] = useState('')
   const [showPicker, setShowPicker] = useState(false)
   const [showMap, setShowMap] = useState(false)
+  // 태블릿을 여러 학생이 돌려 쓰므로 매번 보여준다(localStorage로 한 번만 보여주지 않는다).
+  const [showConsent, setShowConsent] = useState(true)
 
   useEffect(() => subscribeLocations(setLocations), [])
 
@@ -191,6 +193,47 @@ export default function Upload() {
           onCancel={() => setShowPicker(false)}
           onDone={() => setShowPicker(false)}
         />
+      )}
+
+      {/* 실수로 넘기지 않도록 배경 클릭으로는 닫히지 않게 한다(다른 모달과 다른 점). */}
+      {showConsent && (
+        <div className="modal-backdrop">
+          <div
+            className="modal-sheet"
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="사진 올리기 전 확인"
+          >
+            <h2 className="modal-title">올리기 전에 꼭 확인해요</h2>
+            <ol className="help-list">
+              <li>
+                <strong>친구가 나온 사진인가요?</strong>
+                <span>올리기 전에 그 친구에게 “이 사진 올려도 돼?” 하고 꼭 물어보세요.</span>
+              </li>
+              <li>
+                <strong>친구가 싫다고 하면</strong>
+                <span>
+                  그 사진은 올리지 않아요. 꼭 올리고 싶다면 친구 얼굴이 안 보이게 가린(모자이크)
+                  다음에 올려주세요.
+                </span>
+              </li>
+              <li>
+                <strong>이런 사진은 올리지 않아요</strong>
+                <span>
+                  친구가 부끄러워하거나 놀림받을 수 있는 사진, 친구 몰래 찍은 사진은 올리지 않아요.
+                </span>
+              </li>
+            </ol>
+            <div className="modal-actions">
+              <button type="button" className="ghost-btn" onClick={() => navigate('/')}>
+                그만두기
+              </button>
+              <button type="button" className="primary" onClick={() => setShowConsent(false)}>
+                확인했어요
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

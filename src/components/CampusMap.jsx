@@ -244,7 +244,11 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
                 aria-label={extra > 0 ? `사진 ${c.items.length}장 모여있는 곳` : '사진 보기'}
               >
                 {lead.thumbUrl ? (
-                  <img src={lead.thumbUrl} alt="" />
+                  lead.thumbType === 'video' ? (
+                    <video src={`${lead.thumbUrl}#t=0.1`} muted playsInline preload="metadata" />
+                  ) : (
+                    <img src={lead.thumbUrl} alt="" />
+                  )
                 ) : (
                   <span className="map-spot-blank" aria-hidden="true" />
                 )}
@@ -298,7 +302,25 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
                     navigate(`/post/${item.id}`)
                   }}
                 >
-                  {item.thumbUrl ? <img src={item.thumbUrl} alt="" /> : <span>사진</span>}
+                  {item.thumbUrl ? (
+                    item.thumbType === 'video' ? (
+                      <>
+                        <video
+                          src={`${item.thumbUrl}#t=0.1`}
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                        <span className="cluster-play" aria-hidden="true">
+                          ▶
+                        </span>
+                      </>
+                    ) : (
+                      <img src={item.thumbUrl} alt="" />
+                    )
+                  ) : (
+                    <span>사진</span>
+                  )}
                 </button>
               ))}
             </div>

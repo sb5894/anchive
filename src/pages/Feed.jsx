@@ -65,6 +65,7 @@ export default function Feed() {
           x: p.spot.x,
           y: p.spot.y,
           thumbUrl: p.media?.[0]?.url,
+          thumbType: p.media?.[0]?.type,
         })),
     [posts]
   )
