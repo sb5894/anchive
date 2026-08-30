@@ -199,6 +199,25 @@ button.primary.danger:hover:not(:disabled) {
   color: var(--warn-soft-text);
   font-size: 13px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* 공용 태블릿에 관리자 로그인이 남아 다음 학생에게 넘어가지 않도록,
+   /admin까지 들어가지 않고 첫 화면에서 바로 로그아웃할 수 있게 한다. */
+.admin-signout {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--warn-soft-text) 40%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--warn-soft-text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 /* 이름 고르기 모달 */
@@ -276,19 +295,22 @@ button.primary.danger:hover:not(:disabled) {
   position: relative;
 }
 
+/* 사진 위에 겹쳐서(38x26px) 아이들이 호기심에 누를 여지가 컸던 것을, 사진 아래
+   전폭 행(44px)으로 옮겨 실수로 누르기 어렵게 한다. 비관리자에게는 아예 렌더되지
+   않으므로(onAdminDelete가 undefined) 일반 사용자의 격자 모양은 그대로다. */
 .card-delete-btn {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  padding: 4px 8px;
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 8px;
   border: none;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface);
   color: var(--danger);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(var(--shadow-rgb), 0.2);
 }
 
 .map-toolbar {

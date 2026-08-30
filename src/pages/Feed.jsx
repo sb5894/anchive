@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
 import { subscribeLocations } from '../lib/locations'
 import { subscribeFeedByLocation, softDeletePost } from '../lib/posts'
+import { adminSignOut } from '../lib/admin'
 import PostCard from '../components/PostCard'
 import CampusMap from '../components/CampusMap'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -104,7 +105,14 @@ export default function Feed() {
 
   return (
     <div className="page feed">
-      {isAdmin && <p className="admin-banner">관리자 모드 — 모든 글과 댓글을 지울 수 있어요</p>}
+      {isAdmin && (
+        <p className="admin-banner">
+          관리자 모드 — 모든 글과 댓글을 지울 수 있어요
+          <button type="button" className="admin-signout" onClick={() => adminSignOut()}>
+            로그아웃
+          </button>
+        </p>
+      )}
       {deleteError && <p className="error">{deleteError}</p>}
       {loadError && (
         <p className="error">

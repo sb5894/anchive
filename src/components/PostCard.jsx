@@ -24,7 +24,7 @@ export default function PostCard({ post, onAdminDelete }) {
           type="button"
           className="card-delete-btn"
           onClick={() => onAdminDelete(post)}
-          aria-label="이 게시물 삭제"
+          aria-label={`${post.authorInfo?.grade}-${post.authorInfo?.class} ${post.authorInfo?.name}님의 게시물 삭제`}
         >
           삭제
         </button>
