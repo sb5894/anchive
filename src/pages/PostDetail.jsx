@@ -41,6 +41,13 @@ export default function PostDetail() {
   const [showSpotMap, setShowSpotMap] = useState(false)
   const trackRef = useRef(null)
   const [confirmingPostDelete, setConfirmingPostDelete] = useState(false)
+  // 내가 방금 삭제하고 첫 화면으로 이동하는 중임을 표시한다. 이게 없으면 삭제 직후
+  // Firestore가 deleted:true를 먼저 반영해 navigate('/')가 끝나기 전 한 프레임 동안
+  // "게시물을 찾을 수 없어요"가 스쳐 지나간다.
+  const [leaving, setLeaving] = useState(false)
+
+  // 관리자는 남의 글/댓글도 지울 수 있고, 삭제된 글도 계속 볼 수 있다(행사 당일 즉시 대응·확인용).
+  const isAdmin = !isAnonymous
 
   useEffect(
     () =>
@@ -54,9 +61,11 @@ export default function PostDetail() {
   useEffect(() => subscribeLocations(setLocations), [])
   useEffect(() => subscribeLiked(postId, uid, setLiked), [postId, uid])
 
-  if (checkedPostId !== postId) return <div className="page center">불러오는 중...</div>
+  if (leaving || checkedPostId !== postId) return <div className="page center">불러오는 중...</div>
 
-  if (!post) {
+  // 삭제된 게시물은 일반 사용자에게는 "찾을 수 없음"과 동일하게 처리한다.
+  // 데이터 자체(및 Storage 파일)는 지워지지 않으므로 완전한 삭제는 별도 관리 스크립트가 필요하다.
+  if (!post || (post.deleted && !isAdmin)) {
     return (
       <div className="page center post-not-found">
         <p>게시물을 찾을 수 없어요.</p>
@@ -78,9 +87,11 @@ export default function PostDetail() {
     try {
       setActionError('')
       await fn()
+      return true
     } catch (err) {
       console.error(err)
       setActionError('처리 중 문제가 발생했습니다. 다시 시도해 주세요.')
+      return false
     }
   }
 
@@ -123,10 +134,14 @@ export default function PostDetail() {
 
   async function confirmDeletePost() {
     setConfirmingPostDelete(false)
-    await runAction(async () => {
-      await softDeletePost(postId, post.caption)
+    setLeaving(true)
+    const ok = await runAction(() => softDeletePost(postId, post.caption))
+    if (ok) {
       navigate('/')
-    })
+    } else {
+      // 삭제가 실패했으면 "찾을 수 없음" 화면에 갇히지 않도록 되돌린다.
+      setLeaving(false)
+    }
   }
 
   async function handleSaveCaption() {
@@ -163,8 +178,6 @@ export default function PostDetail() {
     setMediaIndex(next)
   }
 
-  // 관리자는 남의 글/댓글도 지울 수 있게 한다(행사 당일 즉시 대응용).
-  const isAdmin = !isAnonymous
   const canEditPost = post.authorUid === uid
   const canDeletePost = canEditPost || isAdmin
 
@@ -175,6 +188,9 @@ export default function PostDetail() {
       </Link>
 
       {isAdmin && <p className="admin-banner">관리자 모드 — 모든 글과 댓글을 지울 수 있어요</p>}
+      {isAdmin && post.deleted && (
+        <p className="admin-banner">삭제된 게시물 — 관리자에게만 보여요</p>
+      )}
 
       {/* 여러 장은 세로로 쌓지 않고 옆으로 넘겨 본다.
           터치 기기에서는 스와이프(scroll-snap), 그 외에는 ‹ › 버튼으로 — 두 경로 모두 제공. */}
