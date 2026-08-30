@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { loadRoster } from '../lib/roster'
 import { useIdentity } from '../lib/IdentityContext'
+import Modal from './Modal'
 
 // 사진 올리기·댓글 쓰기처럼 "누가 썼는지"가 필요한 순간에만 띄우는 이름 선택 모달.
 // 구경만 할 때는 이 화면을 거치지 않는다.
@@ -66,15 +67,8 @@ export default function IdentityPicker({ onDone, onCancel, reason }) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div
-        className="modal-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label="이름 고르기"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="modal-title">이름 고르기</h2>
+    <Modal label="이름 고르기" onClose={onCancel}>
+      <h2 className="modal-title">이름 고르기</h2>
         <p className="modal-sub">{reason || '누가 올렸는지 알 수 있게 이름을 골라 주세요.'}</p>
 
         {loading && <p className="hint">명단을 불러오는 중...</p>}
@@ -153,7 +147,6 @@ export default function IdentityPicker({ onDone, onCancel, reason }) {
             </div>
           </>
         )}
-      </div>
-    </div>
+    </Modal>
   )
 }

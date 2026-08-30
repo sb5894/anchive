@@ -181,6 +181,9 @@ export default function PostDetail() {
   const canEditPost = post.authorUid === uid
   const canDeletePost = canEditPost || isAdmin
 
+  // 감싸는 라벨이 없는 화면이라(카드와 달리) alt이 스크린리더의 유일한 정보원이다.
+  const mediaAltBase = `${post.authorInfo?.grade}-${post.authorInfo?.class} ${post.authorInfo?.name}님이 올린 사진`
+
   return (
     <div className="page post-detail">
       <Link to="/" className="back">
@@ -196,11 +199,15 @@ export default function PostDetail() {
           터치 기기에서는 스와이프(scroll-snap), 그 외에는 ‹ › 버튼으로 — 두 경로 모두 제공. */}
       <div className="media-viewer">
         <div className="images" ref={trackRef} onScroll={handleTrackScroll}>
-          {post.media?.map((m) =>
+          {post.media?.map((m, i) =>
             m.type === 'video' ? (
               <video key={m.url} src={m.url} controls playsInline />
             ) : (
-              <img key={m.url} src={m.url} alt="" />
+              <img
+                key={m.url}
+                src={m.url}
+                alt={post.caption || `${mediaAltBase}${mediaCount > 1 ? ` ${i + 1}` : ''}`}
+              />
             )
           )}
         </div>

@@ -7,6 +7,7 @@ import PostCard from '../components/PostCard'
 import CampusMap from '../components/CampusMap'
 import ConfirmDialog from '../components/ConfirmDialog'
 import IdentityPicker from '../components/IdentityPicker'
+import Modal from '../components/Modal'
 import { ETC_ID, ETC_NAME, locationIdForSpot } from '../lib/campusRegions'
 import { GridIcon, HelpIcon, MapIcon } from '../components/icons'
 
@@ -104,6 +105,7 @@ export default function Feed() {
           <button
             type="button"
             className={viewMode === 'map' ? 'toggle-btn active' : 'toggle-btn'}
+            aria-pressed={viewMode === 'map'}
             onClick={() => setViewMode('map')}
           >
             <MapIcon />
@@ -112,6 +114,7 @@ export default function Feed() {
           <button
             type="button"
             className={viewMode === 'grid' ? 'toggle-btn active' : 'toggle-btn'}
+            aria-pressed={viewMode === 'grid'}
             onClick={() => setViewMode('grid')}
           >
             <GridIcon />
@@ -124,11 +127,13 @@ export default function Feed() {
         </button>
       </div>
 
-      {/* 장소 필터는 '보기 방식'과 성격이 달라 따로 두고, 지도 뷰·모아 보기 뷰 모두에 보여준다. */}
-      <div className="place-bar">
+      {/* 장소 필터는 '보기 방식'과 성격이 달라 따로 두고, 지도 뷰·모아 보기 뷰 모두에 보여준다.
+          장소가 바뀌면 스크린리더가 알 수 있도록 aria-live로 감싼다. */}
+      <div className="place-bar" aria-live="polite">
         <button
           type="button"
           className={locationId === '' ? 'chip place-chip active' : 'chip place-chip'}
+          aria-pressed={locationId === ''}
           onClick={() => setLocationId('')}
         >
           전체 장소
@@ -185,15 +190,8 @@ export default function Feed() {
       )}
 
       {showHelp && (
-        <div className="modal-backdrop" onClick={() => setShowHelp(false)}>
-          <div
-            className="modal-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-label="사용법"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="modal-title">이렇게 쓰면 돼요</h2>
+        <Modal label="사용법" onClose={() => setShowHelp(false)}>
+          <h2 className="modal-title">이렇게 쓰면 돼요</h2>
             <ol className="help-list">
               <li>
                 <strong>사진 구경하기</strong>
@@ -226,20 +224,12 @@ export default function Feed() {
                 알겠어요
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {showPlacePicker && (
-        <div className="modal-backdrop" onClick={() => setShowPlacePicker(false)}>
-          <div
-            className="modal-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-label="장소 고르기"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="modal-title">장소 고르기</h2>
+        <Modal label="장소 고르기" onClose={() => setShowPlacePicker(false)}>
+          <h2 className="modal-title">장소 고르기</h2>
             <p className="modal-sub">사진을 찍은 곳을 눌러 보세요.</p>
             <div className="place-list">
               {categories.map((c) => (
@@ -247,6 +237,7 @@ export default function Feed() {
                   key={c.id}
                   type="button"
                   className={locationId === c.id ? 'place-item active' : 'place-item'}
+                  aria-pressed={locationId === c.id}
                   onClick={() => {
                     setLocationId(c.id)
                     setShowPlacePicker(false)
@@ -262,8 +253,7 @@ export default function Feed() {
                 닫기
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {pickerIntent && (

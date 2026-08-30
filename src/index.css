@@ -13,7 +13,7 @@
 
 :root {
   --text: #2f3437;
-  --text-muted: #787774;
+  --text-muted: #6b6a67; /* was #787774 — 배경 위 대비 4.32:1로 AA(4.5) 미달이었다 */
   --bg: #fbfbfa;
   --surface: #ffffff;
   --surface-alt: #f7f6f3;

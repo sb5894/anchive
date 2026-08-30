@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LOCATION_REGIONS } from '../lib/campusRegions'
+import Modal from './Modal'
 
 // 사용자가 직접 만든 손그림풍 캠퍼스 일러스트(school-map-3.webp)를 배경으로 쓴다.
 // 원본 PNG(school-map-3.png, 3.2MB)도 public/에 남겨 두었다 — 다시 압축할 일이 있을 때 쓴다.
@@ -234,6 +235,7 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
                   type="button"
                   className={activeId === cat.id ? 'map-region active' : 'map-region'}
                   aria-label={cat.name}
+                  aria-pressed={activeId === cat.id}
                   style={{
                     left: `${region.left}%`,
                     top: `${region.top}%`,
@@ -306,15 +308,8 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
       </div>
 
       {openCluster && (
-        <div className="modal-backdrop" onClick={() => setOpenCluster(null)}>
-          <div
-            className="modal-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-label="이 자리에서 찍은 사진"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="modal-title">이 자리에서 찍은 사진</h2>
+        <Modal label="이 자리에서 찍은 사진" onClose={() => setOpenCluster(null)}>
+          <h2 className="modal-title">이 자리에서 찍은 사진</h2>
             <p className="modal-sub">{openCluster.items.length}장이 모여 있어요. 눌러서 볼 수 있어요.</p>
             <div className="cluster-grid">
               {openCluster.items.map((item) => (
@@ -354,8 +349,7 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
                 닫기
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

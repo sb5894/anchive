@@ -7,6 +7,7 @@ import { createPost } from '../lib/posts'
 import { ETC_ID, ETC_NAME, locationIdForSpot, regionCenter } from '../lib/campusRegions'
 import CampusMap from '../components/CampusMap'
 import IdentityPicker from '../components/IdentityPicker'
+import Modal from '../components/Modal'
 
 export default function Upload() {
   const navigate = useNavigate()
@@ -138,6 +139,7 @@ export default function Upload() {
                     key={loc.id}
                     type="button"
                     className={pickedLocationId === loc.id ? 'chip active' : 'chip'}
+                    aria-pressed={pickedLocationId === loc.id}
                     onClick={() => setSpot(regionCenter(loc.id))}
                   >
                     {loc.name}
@@ -158,6 +160,7 @@ export default function Upload() {
 
         <div className="field">
           <label>설명 (선택)</label>
+          <p className="hint">사진에 무엇이 담겼는지 적으면 눈이 불편한 친구도 알 수 있어요.</p>
           <textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={3} />
         </div>
 
@@ -195,16 +198,10 @@ export default function Upload() {
         />
       )}
 
-      {/* 실수로 넘기지 않도록 배경 클릭으로는 닫히지 않게 한다(다른 모달과 다른 점). */}
+      {/* 실수로 넘기지 않도록 배경 클릭·Esc로는 닫히지 않게 한다(다른 모달과 다른 점). */}
       {showConsent && (
-        <div className="modal-backdrop">
-          <div
-            className="modal-sheet"
-            role="alertdialog"
-            aria-modal="true"
-            aria-label="사진 올리기 전 확인"
-          >
-            <h2 className="modal-title">올리기 전에 꼭 확인해요</h2>
+        <Modal role="alertdialog" label="사진 올리기 전 확인" dismissible={false}>
+          <h2 className="modal-title">올리기 전에 꼭 확인해요</h2>
             <ol className="help-list">
               <li>
                 <strong>친구가 나온 사진인가요?</strong>
@@ -232,8 +229,7 @@ export default function Upload() {
                 확인했어요
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   )
