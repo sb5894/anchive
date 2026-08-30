@@ -78,15 +78,8 @@ export function IdentityProvider({ children }) {
     setIdentityState(rosterEntry)
   }
 
-  function clearIdentity() {
-    localStorage.removeItem(STORAGE_KEY)
-    setIdentityState(null)
-  }
-
   return (
-    <IdentityContext.Provider
-      value={{ uid, isAnonymous, authReady, identity, switchIdentity, clearIdentity }}
-    >
+    <IdentityContext.Provider value={{ uid, isAnonymous, authReady, identity, switchIdentity }}>
       {children}
     </IdentityContext.Provider>
   )

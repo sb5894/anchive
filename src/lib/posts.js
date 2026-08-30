@@ -11,7 +11,6 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
-  where,
 } from 'firebase/firestore'
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { db, storage } from '../firebase'
@@ -83,21 +82,6 @@ export async function createPost({ eventId, spot, authorUid, authorInfo, files, 
   }
 
   return postRef.id
-}
-
-export function subscribeFeed({ eventId }, callback) {
-  const base = collection(db, 'posts')
-  const q = eventId
-    ? query(base, where('eventId', '==', eventId), orderBy('createdAt', 'desc'))
-    : query(base, orderBy('createdAt', 'desc'))
-
-  return onSnapshot(q, (snap) => {
-    callback(
-      snap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .filter((p) => !p.deleted)
-    )
-  })
 }
 
 // 장소 기준 필터. 저장된 값이 아니라 좌표에서 계산한 장소로 거른다.
