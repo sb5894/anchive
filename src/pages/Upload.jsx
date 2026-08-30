@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
 import { UNCATEGORIZED_ID } from '../lib/events'
 import { subscribeLocations } from '../lib/locations'
@@ -72,6 +72,11 @@ export default function Upload() {
 
   return (
     <div className="page upload">
+      {/* 동의창의 '확인했어요'를 누른 뒤에는 여기 말고 나갈 방법이 없었다(PWA 홈 화면
+          설치 시 브라우저 뒤로가기도 없음). 다른 화면과 같은 링크를 재사용한다. */}
+      <Link to="/" className="back">
+        ← 지도로
+      </Link>
       <h1>사진·동영상 올리기</h1>
 
       <form onSubmit={handleSubmit}>
