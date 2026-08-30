@@ -52,6 +52,13 @@ function clampPan(tx, ty, scale, rect) {
   }
 }
 
+// 핀은 좌표를 중심으로 그려지는데 지도 틀이 overflow:hidden이라 가장자리 사진이 잘린다.
+// 분류 기준인 원본 좌표(spot)는 그대로 두고, 그리는 위치만 안쪽으로 민다.
+const PIN_EDGE_INSET = 4
+function insetPercent(v) {
+  return Math.min(100 - PIN_EDGE_INSET, Math.max(PIN_EDGE_INSET, v))
+}
+
 export default function CampusMap({ categories, activeId, onSelect, spots, spot, onMapClick }) {
   const navigate = useNavigate()
   const wrapRef = useRef(null)
@@ -182,6 +189,7 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
     if (movedRef.current) return
     if (!onMapClick) return
     if (e.target.closest('.map-spot') || e.target.closest('.map-region')) return
+    if (e.target.closest('.map-zoom-controls')) return
     const rect = e.currentTarget.getBoundingClientRect()
     // 확대·이동을 되돌려 원래 그림 기준 좌표로 변환한다.
     // (이 보정이 없으면 확대한 상태에서 엉뚱한 자리에 찍혔다.)
@@ -207,6 +215,10 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
       <div
         ref={wrapRef}
         className={onMapClick ? 'campus-map-wrap pickable' : 'campus-map-wrap'}
+        // 기본 배율에서는 페이지 세로 스크롤을 브라우저에 돌려준다(막아만 놓고
+        // 아무 것도 안 하고 있었다 — clampPan이 scale===1일 때 이동량을 0으로 고정한다).
+        // 확대 상태에서만 제스처를 독점해 손가락 조작이 끊기지 않게 한다.
+        style={{ touchAction: view.scale > MIN_ZOOM ? 'none' : 'pan-y' }}
         onClick={handleWrapClick}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -260,8 +272,10 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
                 type="button"
                 className={isPickerDot ? 'map-spot picked' : 'map-spot'}
                 style={{
-                  left: `${c.x}%`,
-                  top: `${c.y}%`,
+                  // 업로드 화면에서 콕 찍은 점(picker dot)은 누른 자리 그대로 찍혀야 하므로
+                  // 밀지 않는다. 실제 사진 핀만 가장자리에서 안쪽으로 민다.
+                  left: `${isPickerDot ? c.x : insetPercent(c.x)}%`,
+                  top: `${isPickerDot ? c.y : insetPercent(c.y)}%`,
                   transform: `translate(-50%, -50%) scale(${1 / zoom})`,
                 }}
                 onClick={(e) => {
@@ -285,26 +299,27 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
           })}
         </div>
 
-        {!onMapClick && (
-          <div className="map-zoom-controls">
-            <button
-              type="button"
-              onClick={() => zoomBy(ZOOM_STEP)}
-              disabled={zoom >= MAX_ZOOM}
-              aria-label="지도 크게 보기"
-            >
-              🔍＋
-            </button>
-            <button
-              type="button"
-              onClick={() => zoomBy(-ZOOM_STEP)}
-              disabled={zoom <= MIN_ZOOM}
-              aria-label="지도 작게 보기"
-            >
-              🔍－
-            </button>
-          </div>
-        )}
+        {/* 찍기 모드(onMapClick)에서도 노출한다 — 마우스 사용자는 핀치를 못 하므로
+            이 버튼이 확대의 유일한 수단이다. 이 레이어를 눌러도 위치가 찍히지 않도록
+            handleWrapClick에서 .map-zoom-controls는 걸러낸다. */}
+        <div className="map-zoom-controls">
+          <button
+            type="button"
+            onClick={() => zoomBy(ZOOM_STEP)}
+            disabled={zoom >= MAX_ZOOM}
+            aria-label="지도 크게 보기"
+          >
+            🔍＋
+          </button>
+          <button
+            type="button"
+            onClick={() => zoomBy(-ZOOM_STEP)}
+            disabled={zoom <= MIN_ZOOM}
+            aria-label="지도 작게 보기"
+          >
+            🔍－
+          </button>
+        </div>
       </div>
 
       {openCluster && (

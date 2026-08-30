@@ -150,9 +150,14 @@ export default function Upload() {
           )}
 
           {spot ? (
-            <p className="picked-where">
-              지금 고른 곳: <strong>{pickedLocationName}</strong>
-            </p>
+            <>
+              <p className="picked-where">
+                지금 고른 곳: <strong>{pickedLocationName}</strong>
+              </p>
+              <button type="button" className="spot-clear" onClick={() => setSpot(null)}>
+                고른 위치 지우기
+              </button>
+            </>
           ) : (
             <p className="picked-where empty-where">아직 위치를 고르지 않았어요</p>
           )}

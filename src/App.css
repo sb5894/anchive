@@ -397,9 +397,9 @@ button.primary.danger:hover:not(:disabled) {
   border: 1px solid var(--border);
   background: var(--map-sky);
   margin-bottom: 4px;
-  /* 손가락 확대·이동을 앱이 직접 처리하므로 브라우저 기본 제스처를 막는다.
-     (브라우저 확대는 사진 묶음을 풀어주지 못해서 지도용으로는 쓸 수 없다) */
-  touch-action: none;
+  /* touch-action은 CampusMap.jsx에서 확대 배율에 따라 인라인으로 설정한다 —
+     기본 배율에서는 페이지 세로 스크롤을 허용하고, 확대 상태에서만 앱이
+     손가락 제스처를 직접 처리하도록 브라우저 기본 동작을 막는다. */
 }
 
 .campus-map-wrap.pickable {
