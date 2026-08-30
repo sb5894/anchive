@@ -284,15 +284,19 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
                 }}
                 aria-label={extra > 0 ? `사진 ${c.items.length}장 모여있는 곳` : '사진 보기'}
               >
-                {lead.thumbUrl ? (
-                  lead.thumbType === 'video' ? (
-                    <video src={`${lead.thumbUrl}#t=0.1`} muted playsInline preload="metadata" />
+                {/* 찍기용 점은 사진이 아니라 좌표만 있는 가짜 항목이라 thumbUrl이 항상 없다.
+                    여기서 렌더를 건너뛰지 않으면 썸네일-없음 대체용 회색 원(.map-spot-blank)이
+                    100% 크기로 덮여서 .map-spot.picked의 그라데이션이 아예 안 보이게 된다. */}
+                {!isPickerDot &&
+                  (lead.thumbUrl ? (
+                    lead.thumbType === 'video' ? (
+                      <video src={`${lead.thumbUrl}#t=0.1`} muted playsInline preload="metadata" />
+                    ) : (
+                      <img src={lead.thumbUrl} alt="" />
+                    )
                   ) : (
-                    <img src={lead.thumbUrl} alt="" />
-                  )
-                ) : (
-                  <span className="map-spot-blank" aria-hidden="true" />
-                )}
+                    <span className="map-spot-blank" aria-hidden="true" />
+                  ))}
                 {extra > 0 && <span className="map-spot-count">+{extra}</span>}
               </button>
             )

@@ -564,7 +564,7 @@ button.primary.danger:hover:not(:disabled) {
 .map-spot.picked {
   width: 22px;
   height: 22px;
-  background: radial-gradient(circle at 35% 30%, #ff8f80, var(--danger));
+  background: radial-gradient(circle at 35% 30%, #ffb3ab, #f75d59);
   cursor: default;
   /* 찍어둔 자리 위를 다시 눌러도 클릭이 아래 지도(wrap)로 통과해 위치를 옮길 수 있게 한다. */
   pointer-events: none;
