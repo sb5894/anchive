@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
 import { UNCATEGORIZED_ID } from '../lib/events'
 import { subscribeLocations } from '../lib/locations'
-import { createPost } from '../lib/posts'
+import { createPost, MAX_VIDEO_BYTES } from '../lib/posts'
 import { ETC_ID, ETC_NAME, locationIdForSpot, regionCenter } from '../lib/campusRegions'
 import CampusMap from '../components/CampusMap'
 import IdentityPicker from '../components/IdentityPicker'
@@ -84,7 +84,19 @@ export default function Upload() {
             onChange={(e) => {
               const picked = Array.from(e.target.files)
               e.target.value = ''
-              setFiles((prev) => [...prev, ...picked])
+              // 용량 초과 동영상은 선택 단계에서 걸러 목록에 넣지 않는다.
+              // 올리기를 눌러야 알게 되면, 앞서 고른 다른 파일이 이미 올라간 뒤에
+              // 실패해 고아 파일이 남을 수 있다.
+              const tooBig = picked.filter(
+                (f) => f.type.startsWith('video/') && f.size > MAX_VIDEO_BYTES
+              )
+              const ok = picked.filter((f) => !tooBig.includes(f))
+              setError(
+                tooBig.length
+                  ? `동영상 "${tooBig[0].name}"이 50MB를 넘어요. 더 짧은 영상으로 올려주세요.`
+                  : ''
+              )
+              setFiles((prev) => [...prev, ...ok])
             }}
           />
           {files.length > 0 && (

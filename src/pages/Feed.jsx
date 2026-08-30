@@ -25,12 +25,27 @@ export default function Feed() {
   const [viewMode, setViewMode] = useState('map') // 'map' | 'grid'
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteError, setDeleteError] = useState('')
+  const [loadError, setLoadError] = useState('')
   const [showHelp, setShowHelp] = useState(false)
   const [showPlacePicker, setShowPlacePicker] = useState(false)
 
   useEffect(() => subscribeLocations(setLocations), [])
 
-  useEffect(() => subscribeFeedByLocation(null, setAllPosts), [])
+  useEffect(
+    () =>
+      subscribeFeedByLocation(
+        null,
+        (posts) => {
+          setAllPosts(posts)
+          setLoadError('')
+        },
+        (err) => {
+          console.error(err)
+          setLoadError('연결이 불안정해요. 잠시 후 다시 시도해 주세요.')
+        }
+      ),
+    []
+  )
 
   const posts = useMemo(
     () =>
@@ -91,6 +106,14 @@ export default function Feed() {
     <div className="page feed">
       {isAdmin && <p className="admin-banner">관리자 모드 — 모든 글과 댓글을 지울 수 있어요</p>}
       {deleteError && <p className="error">{deleteError}</p>}
+      {loadError && (
+        <p className="error">
+          {loadError}{' '}
+          <button type="button" className="ghost-btn" onClick={() => window.location.reload()}>
+            다시 시도
+          </button>
+        </p>
+      )}
       <header className="feed-header">
         {/* 이름은 헤더에 상시 띄우지 않는다. 글·댓글을 쓰려는 순간에만 보여주고
             거기서 바꿀 수 있게 한다(Upload/PostDetail 참고). */}
@@ -168,7 +191,7 @@ export default function Feed() {
           {posts.map((p) => (
             <PostCard key={p.id} post={p} onAdminDelete={isAdmin ? handleAdminDelete : undefined} />
           ))}
-          {posts.length === 0 && (
+          {posts.length === 0 && !loadError && (
             <p className="empty">
               {locationId
                 ? '이 장소에는 아직 사진이 없어요. 다른 장소를 눌러보세요.'

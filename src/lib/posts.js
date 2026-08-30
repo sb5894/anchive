@@ -31,28 +31,35 @@ function extensionOf(filename) {
 export async function createPost({ eventId, spot, authorUid, authorInfo, files, caption, onProgress }) {
   const postRef = doc(collection(db, 'posts'))
 
-  const media = []
-  const uploadedRefs = []
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i]
-    const isVideo = file.type.startsWith('video/')
-
-    if (isVideo && file.size > MAX_VIDEO_BYTES) {
+  // 한 개라도 용량을 넘으면 아무것도 올리지 않는다. 업로드 루프 중간에 걸리면
+  // 이미 올라간 앞선 파일들이 정리 대상에서 빠지므로, 시작 전에 전량 검사한다.
+  for (const file of files) {
+    if (file.type.startsWith('video/') && file.size > MAX_VIDEO_BYTES) {
       throw new Error(`동영상 "${file.name}"이 50MB를 넘어요. 더 짧은 영상으로 올려주세요.`)
     }
-
-    const uploadFile = isVideo ? file : await resizeImage(file)
-    const ext = isVideo ? extensionOf(file.name) : 'jpg'
-    // eventId는 이 디자인에서 고정값이라 분류와 무관하고, Storage 경로를 만드는 용도로만 쓴다.
-    const path = `events/${eventId}/posts/${postRef.id}/${crypto.randomUUID()}.${ext}`
-    const storageRef = ref(storage, path)
-    await uploadBytes(storageRef, uploadFile)
-    uploadedRefs.push(storageRef)
-    media.push({ url: await getDownloadURL(storageRef), type: isVideo ? 'video' : 'image' })
-    onProgress?.(i + 1, files.length)
   }
 
+  const media = []
+  const uploadedRefs = []
+  // 업로드 루프부터 Firestore 저장까지를 한 try로 묶어서, 어느 지점에서 실패하든
+  // (네트워크 끊김, resizeImage 실패, 저장 실패 등) 이미 올라간 파일이 고아로
+  // 남지 않고 함께 정리되게 한다.
   try {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      const isVideo = file.type.startsWith('video/')
+
+      const uploadFile = isVideo ? file : await resizeImage(file)
+      const ext = isVideo ? extensionOf(file.name) : 'jpg'
+      // eventId는 이 디자인에서 고정값이라 분류와 무관하고, Storage 경로를 만드는 용도로만 쓴다.
+      const path = `events/${eventId}/posts/${postRef.id}/${crypto.randomUUID()}.${ext}`
+      const storageRef = ref(storage, path)
+      await uploadBytes(storageRef, uploadFile)
+      uploadedRefs.push(storageRef)
+      media.push({ url: await getDownloadURL(storageRef), type: isVideo ? 'video' : 'image' })
+      onProgress?.(i + 1, files.length)
+    }
+
     await setDoc(postRef, {
       eventId,
       // 지도에 찍은 촬영 위치. {x,y}는 지도 이미지 기준 퍼센트 좌표이고, 이 값이 분류의 유일한 근거다.
@@ -67,7 +74,7 @@ export async function createPost({ eventId, spot, authorUid, authorInfo, files, 
       history: [],
     })
   } catch (err) {
-    // Firestore 저장이 실패하면 이미 올라간 파일이 고아로 남으므로 정리한다.
+    // 업로드나 저장이 어느 단계에서 실패하든, 그때까지 이미 올라간 파일은 고아로 남으므로 정리한다.
     // 정리 자체가 실패해도 원래 오류(err)를 그대로 던져서 사용자에게 보여준다.
     await Promise.all(
       uploadedRefs.map((r) => deleteObject(r).catch((cleanupErr) => console.error('업로드 파일 정리 실패', cleanupErr)))
@@ -95,18 +102,26 @@ export function subscribeFeed({ eventId }, callback) {
 
 // 장소 기준 필터. 저장된 값이 아니라 좌표에서 계산한 장소로 거른다.
 // where절 없이 정렬만 걸어서 새 복합 색인이 필요 없다(게시물 수가 적은 소규모 서비스라 무리 없음).
-export function subscribeFeedByLocation(locationId, callback) {
+export function subscribeFeedByLocation(locationId, callback, onError) {
   const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'))
-  return onSnapshot(q, (snap) => {
-    const all = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => !p.deleted)
-    callback(locationId ? all.filter((p) => locationIdForSpot(p.spot) === locationId) : all)
-  })
+  return onSnapshot(
+    q,
+    (snap) => {
+      const all = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => !p.deleted)
+      callback(locationId ? all.filter((p) => locationIdForSpot(p.spot) === locationId) : all)
+    },
+    onError
+  )
 }
 
-export function subscribePost(postId, callback) {
-  return onSnapshot(doc(db, 'posts', postId), (snap) => {
-    callback(snap.exists() ? { id: snap.id, ...snap.data() } : null)
-  })
+export function subscribePost(postId, callback, onError) {
+  return onSnapshot(
+    doc(db, 'posts', postId),
+    (snap) => {
+      callback(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+    },
+    onError
+  )
 }
 
 // 현재 사용자가 이 게시물에 좋아요를 눌렀는지 실시간으로 알려준다(버튼 활성 표시용).
@@ -158,11 +173,15 @@ export async function softDeletePost(postId, previousCaption) {
   })
 }
 
-export function subscribeComments(postId, callback) {
+export function subscribeComments(postId, callback, onError) {
   const q = query(collection(db, 'posts', postId, 'comments'), orderBy('createdAt', 'asc'))
-  return onSnapshot(q, (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-  })
+  return onSnapshot(
+    q,
+    (snap) => {
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+    },
+    onError
+  )
 }
 
 export async function addComment({ postId, authorUid, authorInfo, text }) {

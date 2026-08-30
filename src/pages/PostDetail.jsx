@@ -32,6 +32,7 @@ export default function PostDetail() {
   const [editingCaption, setEditingCaption] = useState(false)
   const [captionDraft, setCaptionDraft] = useState('')
   const [actionError, setActionError] = useState('')
+  const [loadError, setLoadError] = useState('')
   const [showPicker, setShowPicker] = useState(false)
   const [locations, setLocations] = useState([])
   const [liked, setLiked] = useState(false)
@@ -51,15 +52,34 @@ export default function PostDetail() {
 
   useEffect(
     () =>
-      subscribePost(postId, (data) => {
-        setPost(data)
-        setCheckedPostId(postId)
-      }),
+      subscribePost(
+        postId,
+        (data) => {
+          setPost(data)
+          setCheckedPostId(postId)
+          setLoadError('')
+        },
+        (err) => {
+          console.error(err)
+          setLoadError('연결이 불안정해요. 잠시 후 다시 시도해 주세요.')
+        }
+      ),
     [postId]
   )
   useEffect(() => subscribeComments(postId, setComments), [postId])
   useEffect(() => subscribeLocations(setLocations), [])
   useEffect(() => subscribeLiked(postId, uid, setLiked), [postId, uid])
+
+  if (loadError && checkedPostId !== postId) {
+    return (
+      <div className="page center post-not-found">
+        <p>{loadError}</p>
+        <button type="button" className="primary" onClick={() => window.location.reload()}>
+          다시 시도
+        </button>
+      </div>
+    )
+  }
 
   if (leaving || checkedPostId !== postId) return <div className="page center">불러오는 중...</div>
 
