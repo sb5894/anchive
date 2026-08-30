@@ -63,6 +63,10 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
   const pointersRef = useRef(new Map())
   const gestureRef = useRef(null)
   const movedRef = useRef(false)
+  // 실제로 끌기/핀치가 시작된 포인터만 캡처한다. 탭 시점에 무조건 캡처하면 mousedown과
+  // mouseup의 타깃이 갈라져 click이 wrap에서 발생하고, 사진·건물 버튼의 onClick이
+  // 마우스 환경에서 아예 호출되지 않는 문제가 있었다(터치는 암시적 캡처 덕분에 무사했다).
+  const capturedRef = useRef(new Set())
   // 손가락으로 조작하는 중인지. 전환 효과를 끄는 판단에 쓰이므로 ref가 아니라 상태여야 한다.
   const [gesturing, setGesturing] = useState(false)
 
@@ -87,6 +91,27 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
     return [...pointersRef.current.values()]
   }
 
+  // 포인터가 이미 놓였거나 요소가 사라진 경우 예외가 날 수 있는데,
+  // 붙잡기/놓기에 실패해도 제스처 자체는 동작하므로 조용히 넘어간다.
+  function capturePointer(el, pointerId) {
+    if (capturedRef.current.has(pointerId)) return
+    try {
+      el.setPointerCapture?.(pointerId)
+      capturedRef.current.add(pointerId)
+    } catch {
+      /* 붙잡기 실패는 무시 */
+    }
+  }
+
+  function releasePointer(el, pointerId) {
+    if (!capturedRef.current.delete(pointerId)) return
+    try {
+      el.releasePointerCapture?.(pointerId)
+    } catch {
+      /* 놓기 실패는 무시 */
+    }
+  }
+
   function handlePointerDown(e) {
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     movedRef.current = false
@@ -105,13 +130,6 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
         view,
         rect,
       }
-    }
-    // 포인터가 이미 놓였거나 요소가 사라진 경우 예외가 날 수 있는데,
-    // 붙잡기에 실패해도 제스처 자체는 동작하므로 조용히 넘어간다.
-    try {
-      e.currentTarget.setPointerCapture?.(e.pointerId)
-    } catch {
-      /* 붙잡기 실패는 무시 */
     }
   }
 
@@ -132,11 +150,16 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
         ty: g.midY - (g.midY - g.view.ty) * k,
       }
       movedRef.current = true
+      capturePointer(e.currentTarget, e.pointerId)
       setView({ scale: next, ...clampPan(raw.tx, raw.ty, next, g.rect) })
     } else if (g.mode === 'pan' && pts.length === 1) {
       const dx = pts[0].x - g.startX
       const dy = pts[0].y - g.startY
-      if (Math.hypot(dx, dy) > 6) movedRef.current = true
+      if (Math.hypot(dx, dy) > 6) {
+        movedRef.current = true
+        // 실제로 끌기 시작한 뒤에만 캡처한다 — 커서가 지도 밖으로 나가도 제스처가 이어지게.
+        capturePointer(e.currentTarget, e.pointerId)
+      }
       setView((v) => ({
         scale: v.scale,
         ...clampPan(g.view.tx + dx, g.view.ty + dy, v.scale, g.rect),
@@ -146,6 +169,7 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
 
   function handlePointerUp(e) {
     pointersRef.current.delete(e.pointerId)
+    releasePointer(e.currentTarget, e.pointerId)
     if (pointersRef.current.size === 0) {
       gestureRef.current = null
       setGesturing(false)
