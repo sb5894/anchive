@@ -1275,6 +1275,9 @@ button.primary.danger:hover:not(:disabled) {
   color: var(--accent-contrast);
   cursor: pointer;
   transition: background-color 0.15s ease;
+  flex: none; /* 자리가 좁아도 버튼은 줄이지 않는다 */
+  white-space: nowrap; /* '등록'이 한 자씩 줄바꿈되지 않게 한다 */
+  min-height: 44px; /* 다른 버튼들과 같은 터치 크기 */
 }
 
 .comment-form button:hover {
