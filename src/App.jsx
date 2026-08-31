@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useIdentity } from './lib/IdentityContext'
 import Feed from './pages/Feed'
@@ -19,6 +19,21 @@ function RequireIdentity({ children }) {
 }
 
 function App() {
+  // 사진을 가져가는 쉬운 길(오른쪽 클릭 저장, 끌어다 놓기)을 막는다.
+  // 스크린샷은 웹에서 막을 방법이 없다 — 이건 충동적인 저장을 줄이는 장치일 뿐이고,
+  // 실제 보호는 사용법 안내의 약속 문구와 행사 현장의 지도에 의존한다.
+  useEffect(() => {
+    function blockMedia(e) {
+      if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') e.preventDefault()
+    }
+    document.addEventListener('contextmenu', blockMedia)
+    document.addEventListener('dragstart', blockMedia)
+    return () => {
+      document.removeEventListener('contextmenu', blockMedia)
+      document.removeEventListener('dragstart', blockMedia)
+    }
+  }, [])
+
   return (
     <Routes>
       <Route path="/" element={<Feed />} />

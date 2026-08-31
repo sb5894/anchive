@@ -977,6 +977,25 @@ button.primary.danger:hover:not(:disabled) {
   text-decoration: none;
 }
 
+/* 사진을 꾹 눌렀을 때 뜨는 저장 메뉴와 텍스트 선택을 막는다.
+   스크린샷은 막지 못한다(웹에서 불가능) — App.jsx의 우클릭·드래그 차단과
+   함께 저장·퍼가기를 어렵게 만드는 것까지가 웹에서 할 수 있는 전부다. */
+.images img,
+.images video,
+.post-card-image img,
+.post-card-image video,
+.map-spot img,
+.map-spot video,
+.cluster-item img,
+.cluster-item video,
+.file-preview img,
+.file-preview video {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 /* 여러 장을 옆으로 넘겨 보는 뷰어. 트랙 자체가 가로 스크롤이라
    터치 기기에서는 스와이프가 그대로 동작하고, ‹ › 버튼은 그 위에 얹는다. */
 .media-viewer {
@@ -1122,6 +1141,26 @@ button.primary.danger:hover:not(:disabled) {
   font-size: 15px;
   color: var(--text-muted);
   line-height: 1.45;
+}
+
+/* 사용법 맨 아래 약속 문구. 경고가 아니라 안내 톤이라 accent-soft 색을 쓴다
+   (--warn-soft는 관리자 배너가 쓰는 경고색이라 여기서는 어울리지 않는다). */
+.promise-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.promise-note strong {
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .post-meta {

@@ -12,6 +12,8 @@ import Modal from '../components/Modal'
 import { ETC_ID, ETC_NAME, locationIdForSpot } from '../lib/campusRegions'
 import { GridIcon, HelpIcon, MapIcon } from '../components/icons'
 
+const HELP_SEEN_KEY = 'anchive_help_seen'
+
 export default function Feed() {
   const navigate = useNavigate()
   const { identity, isAnonymous } = useIdentity()
@@ -27,8 +29,26 @@ export default function Feed() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteError, setDeleteError] = useState('')
   const [loadError, setLoadError] = useState('')
-  const [showHelp, setShowHelp] = useState(false)
+  // 처음 온 사람에게는 사용법을 자동으로 띄운다. 한 번 닫으면 다시 뜨지 않고,
+  // 이후에는 위쪽 '사용법' 버튼으로 언제든 다시 볼 수 있다.
+  const [showHelp, setShowHelp] = useState(() => {
+    try {
+      return !localStorage.getItem(HELP_SEEN_KEY)
+    } catch {
+      // 시크릿 모드 등 저장이 막힌 환경에서는 자동으로 띄우지 않는다.
+      return false
+    }
+  })
   const [showPlacePicker, setShowPlacePicker] = useState(false)
+
+  function closeHelp() {
+    setShowHelp(false)
+    try {
+      localStorage.setItem(HELP_SEEN_KEY, '1')
+    } catch {
+      /* 저장 실패는 무시 — 다음에 한 번 더 뜨는 것뿐이다 */
+    }
+  }
 
   useEffect(() => subscribeLocations(setLocations), [])
 
@@ -221,8 +241,11 @@ export default function Feed() {
       )}
 
       {showHelp && (
-        <Modal label="사용법" onClose={() => setShowHelp(false)}>
+        <Modal label="사용법" onClose={closeHelp}>
           <h2 className="modal-title">이렇게 쓰면 돼요</h2>
+          <p className="modal-sub">
+            이곳은 안성초등학교 개교기념일을 맞아, 학교를 사랑하는 우리의 모습을 함께 담는 공간이에요.
+          </p>
             <ol className="help-list">
               <li>
                 <strong>사진 구경하기</strong>
@@ -250,8 +273,12 @@ export default function Feed() {
                 <span>사진을 눌러 들어가면 좋아요를 누르고 댓글도 쓸 수 있어요.</span>
               </li>
             </ol>
+            <p className="promise-note">
+              <strong>우리의 약속</strong>
+              친구가 나온 사진을 저장하거나 다른 곳에 올리지 않기로 약속해요.
+            </p>
             <div className="modal-actions">
-              <button type="button" className="primary" onClick={() => setShowHelp(false)}>
+              <button type="button" className="primary" onClick={closeHelp}>
                 알겠어요
               </button>
             </div>
