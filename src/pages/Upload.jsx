@@ -26,6 +26,19 @@ export default function Upload() {
 
   useEffect(() => subscribeLocations(setLocations), [])
 
+  // 고른 파일의 임시 미리보기 주소. files가 바뀌면 새로 만들고, 이전 것은 정리한다.
+  const previews = useMemo(
+    () =>
+      files.map((f) => ({
+        name: f.name,
+        url: URL.createObjectURL(f),
+        isVideo: f.type.startsWith('video/'),
+      })),
+    [files]
+  )
+
+  useEffect(() => () => previews.forEach((p) => URL.revokeObjectURL(p.url)), [previews])
+
   // 찍은 좌표가 어느 장소인지는 좌표에서 바로 계산한다(따로 고르지 않는다).
   const pickedLocationId = useMemo(() => (spot ? locationIdForSpot(spot) : null), [spot])
   const pickedLocationName = useMemo(() => {
@@ -81,8 +94,18 @@ export default function Upload() {
 
       <form onSubmit={handleSubmit}>
         <div className="field">
-          <label>사진·동영상 (여러 개 선택 가능, 동영상은 50MB까지)</label>
+          <label className="step-label" htmlFor="file-input">
+            <span className="step-num">1</span>
+            사진·동영상 고르기
+            <span className="step-required" aria-hidden="true">*</span>
+            <span className="visually-hidden">필수</span>
+            <span className="step-note">여러 개 고를 수 있어요. 동영상은 50MB까지.</span>
+          </label>
+          {/* 브라우저 기본 파일 버튼은 모양을 못 바꾸고 너무 작아서 1단계인 걸 놓친다.
+              화면에서만 숨기고(포커스는 살려 둔다) 아래 label을 큰 버튼처럼 꾸며 연결한다. */}
           <input
+            id="file-input"
+            className="visually-hidden"
             type="file"
             accept="image/*,video/*"
             multiple
@@ -104,30 +127,43 @@ export default function Upload() {
               setFiles((prev) => [...prev, ...ok])
             }}
           />
-          {files.length > 0 && (
-            <ul className="file-list">
-              {files.map((f, i) => (
-                <li key={`${f.name}-${f.lastModified}-${i}`}>
-                  <span>
-                    {f.type.startsWith('video/') ? '[VIDEO] ' : '[IMG] '}
-                    {f.name}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
+          <label htmlFor="file-input" className="file-pick-btn">
+            📷 사진·동영상 고르기
+          </label>
+          {previews.length > 0 && (
+            <>
+              <ul className="file-preview-grid">
+                {previews.map((p, i) => (
+                  <li key={`${p.name}-${i}`} className="file-preview">
+                    {p.isVideo ? (
+                      <video src={`${p.url}#t=0.1`} muted playsInline preload="metadata" />
+                    ) : (
+                      <img src={p.url} alt="" />
+                    )}
+                    <button
+                      type="button"
+                      className="file-preview-remove"
+                      aria-label={`${p.name} 빼기`}
+                      onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <p className="hint">{files.length}개 골랐어요 — 더 고르려면 위 버튼을 다시 눌러주세요</p>
+            </>
           )}
-          {files.length > 0 && <p className="hint">{files.length}개 선택됨 — 더 고르려면 다시 눌러주세요</p>}
         </div>
 
         {/* 사진을 고른 다음 위치를 정하는 순서. 지도는 자리를 많이 차지해서 기본은 접어 둔다. */}
         <div className="field">
-          <label>사진을 찍은 곳</label>
+          <label className="step-label">
+            <span className="step-num">2</span>
+            사진을 찍은 곳 고르기
+            <span className="step-required" aria-hidden="true">*</span>
+            <span className="visually-hidden">필수</span>
+          </label>
           <button
             type="button"
             className="spot-toggle"
@@ -181,8 +217,11 @@ export default function Upload() {
         </div>
 
         <div className="field">
-          <label>설명 (선택)</label>
-          <p className="hint">사진에 무엇이 담겼는지 적으면 눈이 불편한 친구도 알 수 있어요.</p>
+          <label className="step-label">
+            <span className="step-num">3</span>
+            설명 쓰기
+            <span className="step-note">어떤 사진인지 다른 친구들도 알기 쉬워요.</span>
+          </label>
           <textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={3} />
         </div>
 
