@@ -146,7 +146,35 @@ export default function Feed() {
         {/* 이름은 헤더에 상시 띄우지 않는다. 글·댓글을 쓰려는 순간에만 보여주고
             거기서 바꿀 수 있게 한다(Upload/PostDetail 참고). */}
         <div className="brand">
-          <h1>안성초 추억지도</h1>
+          <img
+            className="brand-mascot"
+            src="/mascot-bonghwang.webp"
+            alt=""
+            aria-hidden="true"
+            width="72"
+            height="72"
+          />
+          <h1 className="brand-title">
+            {/* 온글잎 박다현체로 미리 뽑아낸 SVG 로고(scripts/make-title-svg.mjs).
+                웹폰트로 쓰면 964KB를 통째로 받아야 해서, 제목 글자만 그림으로 떴다. */}
+            <img src="/title-anchive.svg" alt="안성초 추억지도" width="260" height="50" />
+          </h1>
+          {/* 손으로 그은 듯한 밑줄. 장식이라 스크린리더에서는 숨긴다. */}
+          <svg
+            className="brand-underline"
+            viewBox="0 0 200 12"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M4 8 C 40 3, 62 10, 98 5 S 160 9, 196 4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+          </svg>
           <p className="brand-sub">124주년 개교기념일 팝업 게시판</p>
         </div>
       </header>

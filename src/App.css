@@ -280,15 +280,40 @@ button.primary.danger:hover:not(:disabled) {
   margin-bottom: 16px;
 }
 
-.brand h1 {
+/* 손글씨 폰트를 웹폰트로 받는 대신 제목 글자를 미리 SVG로 떠서 <img>로 넣는다
+   (scripts/make-title-svg.mjs). 그래서 여긴 font-size가 아니라 이미지 크기다. */
+.brand-title {
   margin: 0;
-  font-size: 30px;
-  line-height: 1.25;
+  line-height: 1;
+}
+
+.brand-title img {
+  display: block;
+  width: min(260px, 72vw);
+  height: auto;
+  margin: 0 auto;
+}
+
+.brand-mascot {
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 4px;
+  object-fit: contain;
+}
+
+.brand-underline {
+  display: block;
+  width: min(240px, 70%);
+  height: 12px;
+  margin: 2px auto 0;
+  color: var(--point);
 }
 
 @media (max-width: 380px) {
-  .brand h1 {
-    font-size: 26px;
+  .brand-mascot {
+    width: 56px;
+    height: 56px;
   }
 }
 

@@ -29,6 +29,8 @@
   --warn-soft-text: #956400;
   --like: #b8375f;
   --like-soft-bg: #fbe8ee;
+  /* 지도 찍기용 점(.map-spot.picked)과 같은 값 — 앱 전체가 공유하는 포인트 색. */
+  --point: #f75d59;
 
   /* 텍스트 색조와 맞춘 그림자(순수 블랙 대신 웜 그레이 계열) */
   --shadow-rgb: 47, 52, 55;
