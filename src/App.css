@@ -280,41 +280,44 @@ button.primary.danger:hover:not(:disabled) {
   margin-bottom: 16px;
 }
 
+/* 제목·양옆 마스코트를 한 줄에 놓는 행. 좁은 화면에서는 셋 다 vw 단위로
+   함께 줄어들어서, 어느 화면에서도 서로 부딪히거나 넘치지 않는다. */
+.brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 2vw, 10px);
+}
+
 /* 손글씨 폰트를 웹폰트로 받는 대신 제목 글자를 미리 SVG로 떠서 <img>로 넣는다
    (scripts/make-title-svg.mjs). 그래서 여긴 font-size가 아니라 이미지 크기다. */
 .brand-title {
   margin: 0;
   line-height: 1;
+  flex: none;
 }
 
 .brand-title img {
   display: block;
-  width: min(260px, 72vw);
+  width: min(220px, 60vw);
   height: auto;
-  margin: 0 auto;
 }
 
+/* 교표의 봉황을 등 쪽에서 잘라 제목 옆에 작게 둔 것 — 높이를 제목 글자
+   크기 정도로 맞추고, 폭은 원본 비율 그대로(width 미지정) 따라가게 한다. */
 .brand-mascot {
   display: block;
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 4px;
-  object-fit: contain;
+  flex: none;
+  height: clamp(26px, 11vw, 42px);
+  width: auto;
 }
 
 .brand-underline {
   display: block;
-  width: min(240px, 70%);
+  width: min(200px, 60%);
   height: 12px;
   margin: 2px auto 0;
   color: var(--point);
-}
-
-@media (max-width: 380px) {
-  .brand-mascot {
-    width: 56px;
-    height: 56px;
-  }
 }
 
 .brand-sub {
