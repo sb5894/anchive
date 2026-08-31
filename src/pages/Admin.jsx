@@ -112,7 +112,8 @@ export default function Admin() {
               <summary>이력 ({p.history?.length || 0})</summary>
               {p.history?.map((h, i) => (
                 <div key={i} className="history-entry">
-                  {h.caption}
+                  {h.changed?.length > 0 && <strong>{h.changed.join(', ')} 바뀜</strong>}
+                  {h.caption ? ` ${h.caption}` : ''}
                 </div>
               ))}
             </details>
