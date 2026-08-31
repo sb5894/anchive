@@ -311,7 +311,9 @@ export default function PostDetail() {
         )}
       </div>
 
-      {actionError && <p className="error">{actionError}</p>}
+      {/* 수정 중일 때는 저장 버튼 바로 위에 따로 띄운다(아래 edit-actions 앞) — 화면 위쪽에
+          두면 스크롤해서 저장을 누르려는 순간 눈에 안 들어와 놓치기 쉽다. */}
+      {actionError && !editing && <p className="error">{actionError}</p>}
 
       <div className="post-meta">
         <span className="author">
@@ -477,6 +479,8 @@ export default function PostDetail() {
             </label>
             <input id="edit-caption" value={draftCaption} onChange={(e) => setDraftCaption(e.target.value)} />
           </div>
+
+          {actionError && <p className="error">{actionError}</p>}
 
           <div className="edit-actions">
             <button type="button" className="ghost-btn" onClick={() => setEditing(false)}>
