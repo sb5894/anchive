@@ -127,7 +127,7 @@ export default function Feed() {
     <div className="page feed">
       {isAdmin && (
         <p className="admin-banner">
-          관리자 모드 — 모든 글과 댓글을 지울 수 있어요
+          관리자 모드 — 모든 글과 댓글을 고치고 지울 수 있어요
           <button type="button" className="admin-signout" onClick={() => adminSignOut()}>
             로그아웃
           </button>

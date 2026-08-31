@@ -198,8 +198,9 @@ export default function PostDetail() {
     setMediaIndex(next)
   }
 
-  const canEditPost = post.authorUid === uid
-  const canDeletePost = canEditPost || isAdmin
+  // 관리자도 남의 글을 고칠 수 있다(문구 한 줄 때문에 글 전체를 지우지 않아도 되게).
+  const canEditPost = post.authorUid === uid || isAdmin
+  const canDeletePost = post.authorUid === uid || isAdmin
 
   // 감싸는 라벨이 없는 화면이라(카드와 달리) alt이 스크린리더의 유일한 정보원이다.
   const mediaAltBase = `${post.authorInfo?.grade}-${post.authorInfo?.class} ${post.authorInfo?.name}님이 올린 사진`
@@ -210,7 +211,7 @@ export default function PostDetail() {
         ← 지도로
       </Link>
 
-      {isAdmin && <p className="admin-banner">관리자 모드 — 모든 글과 댓글을 지울 수 있어요</p>}
+      {isAdmin && <p className="admin-banner">관리자 모드 — 모든 글과 댓글을 고치고 지울 수 있어요</p>}
       {isAdmin && post.deleted && (
         <p className="admin-banner">삭제된 게시물 — 관리자에게만 보여요</p>
       )}
@@ -352,7 +353,7 @@ export default function PostDetail() {
               )}
               {editingId !== c.id && (c.authorUid === uid || isAdmin) && (
                 <div className="comment-actions">
-                  {c.authorUid === uid && (
+                  {(c.authorUid === uid || isAdmin) && (
                     <button
                       onClick={() => {
                         setEditingId(c.id)
