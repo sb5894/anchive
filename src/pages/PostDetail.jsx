@@ -1,21 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useIdentity } from '../lib/IdentityContext'
 import CampusMap from '../components/CampusMap'
 import ConfirmDialog from '../components/ConfirmDialog'
 import IdentityPicker from '../components/IdentityPicker'
-import { ETC_ID, ETC_NAME, locationIdForSpot } from '../lib/campusRegions'
+import { ETC_ID, ETC_NAME, locationIdForSpot, regionCenter } from '../lib/campusRegions'
 import { subscribeLocations } from '../lib/locations'
 import {
   addComment,
   editComment,
-  editPost,
+  MAX_VIDEO_BYTES,
   softDeleteComment,
   softDeletePost,
   subscribeComments,
   subscribeLiked,
   subscribePost,
   toggleLike,
+  updatePost,
 } from '../lib/posts'
 
 export default function PostDetail() {
@@ -29,8 +30,14 @@ export default function PostDetail() {
   const [commentText, setCommentText] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState('')
-  const [editingCaption, setEditingCaption] = useState(false)
-  const [captionDraft, setCaptionDraft] = useState('')
+  // 수정 모드에서 임시로 들고 있는 값들. 저장을 눌러야 실제 게시물에 반영된다.
+  const [editing, setEditing] = useState(false)
+  const [draftCaption, setDraftCaption] = useState('')
+  const [draftSpot, setDraftSpot] = useState(null)
+  const [draftMedia, setDraftMedia] = useState([]) // 남길 기존 사진 {url, type}
+  const [newFiles, setNewFiles] = useState([]) // 새로 고른 File 객체
+  const [editMapOpen, setEditMapOpen] = useState(false)
+  const [savingEdit, setSavingEdit] = useState(false)
   const [actionError, setActionError] = useState('')
   const [loadError, setLoadError] = useState('')
   const [showPicker, setShowPicker] = useState(false)
@@ -70,6 +77,18 @@ export default function PostDetail() {
   useEffect(() => subscribeLocations(setLocations), [])
   useEffect(() => subscribeLiked(postId, uid, setLiked), [postId, uid])
 
+  // 수정 모드에서 새로 고른 파일의 임시 미리보기 주소. Upload.jsx와 같은 방식.
+  const newPreviews = useMemo(
+    () =>
+      newFiles.map((f) => ({
+        name: f.name,
+        url: URL.createObjectURL(f),
+        isVideo: f.type.startsWith('video/'),
+      })),
+    [newFiles]
+  )
+  useEffect(() => () => newPreviews.forEach((p) => URL.revokeObjectURL(p.url)), [newPreviews])
+
   if (loadError && checkedPostId !== postId) {
     return (
       <div className="page center post-not-found">
@@ -102,6 +121,14 @@ export default function PostDetail() {
     spotLocationId === ETC_ID
       ? ETC_NAME
       : locations.find((l) => l.id === spotLocationId)?.name || ETC_NAME
+
+  // 수정 모드에서 지금 고른 위치의 이름. draftSpot 기준으로 같은 방식 계산.
+  const draftLocationId = draftSpot ? locationIdForSpot(draftSpot) : null
+  const draftLocationName = draftLocationId
+    ? draftLocationId === ETC_ID
+      ? ETC_NAME
+      : locations.find((l) => l.id === draftLocationId)?.name || ETC_NAME
+    : null
 
   async function runAction(fn) {
     try {
@@ -164,11 +191,35 @@ export default function PostDetail() {
     }
   }
 
-  async function handleSaveCaption() {
-    await runAction(async () => {
-      await editPost({ postId, newCaption: captionDraft.trim(), previousCaption: post.caption })
-      setEditingCaption(false)
-    })
+  async function handleSaveEdit() {
+    // 편집 중에는 0장이어도 되지만, 저장은 막는다(사진 0장 게시물은 모든 화면에서 빈 칸으로 깨진다).
+    if (draftMedia.length + newFiles.length === 0) {
+      setActionError('사진이나 동영상이 최소 한 개는 있어야 해요.')
+      return
+    }
+    if (!draftSpot) {
+      setActionError('사진을 찍은 위치를 지도에서 골라 주세요.')
+      setEditMapOpen(true)
+      return
+    }
+
+    setSavingEdit(true)
+    const ok = await runAction(() =>
+      updatePost({
+        postId,
+        eventId: post.eventId,
+        keptMedia: draftMedia,
+        newFiles,
+        newSpot: draftSpot,
+        newCaption: draftCaption.trim(),
+        previousCaption: post.caption,
+      })
+    )
+    setSavingEdit(false)
+    if (ok) {
+      setEditing(false)
+      setNewFiles([])
+    }
   }
 
   async function handleToggleLike() {
@@ -274,29 +325,167 @@ export default function PostDetail() {
         >
           ♥ {post.likeCount || 0}
         </button>
-        {!editingCaption && canEditPost && (
+        {!editing && canEditPost && (
           <button
             className="delete-btn"
             onClick={() => {
-              setCaptionDraft(post.caption || '')
-              setEditingCaption(true)
+              setDraftCaption(post.caption || '')
+              setDraftSpot(post.spot || null)
+              setDraftMedia(post.media || [])
+              setNewFiles([])
+              setEditMapOpen(false)
+              setEditing(true)
             }}
           >
             수정
           </button>
         )}
-        {!editingCaption && canDeletePost && (
+        {!editing && canDeletePost && (
           <button className="delete-btn" onClick={handleDeletePost}>
             삭제
           </button>
         )}
       </div>
 
-      {editingCaption ? (
-        <div className="comment-edit caption-edit">
-          <input value={captionDraft} onChange={(e) => setCaptionDraft(e.target.value)} />
-          <button onClick={handleSaveCaption}>저장</button>
-          <button onClick={() => setEditingCaption(false)}>취소</button>
+      {editing ? (
+        <div className="edit-panel">
+          {/* 1 사진 */}
+          <div className="field">
+            <label className="step-label" htmlFor="edit-file-input">
+              <span className="step-num">1</span>
+              사진·동영상
+            </label>
+            <input
+              id="edit-file-input"
+              className="visually-hidden"
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              onChange={(e) => {
+                const picked = Array.from(e.target.files)
+                e.target.value = ''
+                const tooBig = picked.filter(
+                  (f) => f.type.startsWith('video/') && f.size > MAX_VIDEO_BYTES
+                )
+                setActionError(
+                  tooBig.length
+                    ? `동영상 "${tooBig[0].name}"이 50MB를 넘어요. 더 짧은 영상으로 올려주세요.`
+                    : ''
+                )
+                setNewFiles((prev) => [...prev, ...picked.filter((f) => !tooBig.includes(f))])
+              }}
+            />
+            <label htmlFor="edit-file-input" className="file-pick-btn">
+              사진·동영상 더 고르기
+            </label>
+
+            <ul className="file-preview-grid">
+              {draftMedia.map((m, i) => (
+                <li key={m.url} className="file-preview">
+                  {m.type === 'video' ? (
+                    <video src={`${m.url}#t=0.1`} muted playsInline preload="metadata" />
+                  ) : (
+                    <img src={m.url} alt="" />
+                  )}
+                  <button
+                    type="button"
+                    className="file-preview-remove"
+                    aria-label={`${i + 1}번째 사진 빼기`}
+                    onClick={() => setDraftMedia((prev) => prev.filter((_, idx) => idx !== i))}
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+              {newPreviews.map((p, i) => (
+                <li key={`new-${p.name}-${i}`} className="file-preview">
+                  {p.isVideo ? (
+                    <video src={`${p.url}#t=0.1`} muted playsInline preload="metadata" />
+                  ) : (
+                    <img src={p.url} alt="" />
+                  )}
+                  <button
+                    type="button"
+                    className="file-preview-remove"
+                    aria-label={`${p.name} 빼기`}
+                    onClick={() => setNewFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {draftMedia.length + newFiles.length === 0 && (
+              <p className="hint">사진이나 동영상이 최소 한 개는 있어야 저장할 수 있어요.</p>
+            )}
+          </div>
+
+          {/* 2 위치 */}
+          <div className="field">
+            <label className="step-label">
+              <span className="step-num">2</span>
+              사진을 찍은 곳
+            </label>
+            <button
+              type="button"
+              className="spot-toggle"
+              onClick={() => setEditMapOpen((v) => !v)}
+              aria-expanded={editMapOpen}
+            >
+              {editMapOpen ? '지도 접기' : '위치 바꾸기'}
+            </button>
+            {editMapOpen && (
+              <>
+                <p className="hint">지도에서 사진을 찍은 자리를 눌러 주세요.</p>
+                <CampusMap
+                  categories={locations}
+                  activeId={null}
+                  onSelect={() => {}}
+                  spot={draftSpot}
+                  onMapClick={setDraftSpot}
+                />
+                <p className="hint pick-list-title">정해진 장소에서 고르기</p>
+                <div className="event-filter">
+                  {locations.map((loc) => (
+                    <button
+                      key={loc.id}
+                      type="button"
+                      className={draftLocationId === loc.id ? 'chip active' : 'chip'}
+                      aria-pressed={draftLocationId === loc.id}
+                      onClick={() => setDraftSpot(regionCenter(loc.id))}
+                    >
+                      {loc.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {draftSpot ? (
+              <p className="picked-where">
+                지금 고른 곳: <strong>{draftLocationName}</strong>
+              </p>
+            ) : (
+              <p className="picked-where empty-where">아직 위치를 고르지 않았어요</p>
+            )}
+          </div>
+
+          {/* 3 설명 */}
+          <div className="field">
+            <label className="step-label" htmlFor="edit-caption">
+              <span className="step-num">3</span>
+              설명
+            </label>
+            <input id="edit-caption" value={draftCaption} onChange={(e) => setDraftCaption(e.target.value)} />
+          </div>
+
+          <div className="edit-actions">
+            <button type="button" className="ghost-btn" onClick={() => setEditing(false)}>
+              취소
+            </button>
+            <button type="button" className="primary" onClick={handleSaveEdit} disabled={savingEdit}>
+              {savingEdit ? '저장하는 중...' : '저장'}
+            </button>
+          </div>
         </div>
       ) : (
         post.caption && (
