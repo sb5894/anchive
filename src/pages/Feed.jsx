@@ -187,7 +187,7 @@ export default function Feed() {
               strokeLinecap="round"
             />
           </svg>
-          <p className="brand-sub">124주년 개교기념일 팝업 게시판</p>
+          <p className="brand-sub">124년의 역사와 함께 자란 안성초를 사랑하는 우리</p>
         </div>
       </header>
 
