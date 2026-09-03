@@ -47,9 +47,15 @@ async function uploadMediaFiles({ eventId, postId, files, onProgress }) {
     const ext = isVideo ? extensionOf(file.name) : 'jpg'
     const path = `events/${eventId}/posts/${postId}/${crypto.randomUUID()}.${ext}`
     const storageRef = ref(storage, path)
-    await uploadBytes(storageRef, uploadFile)
+    // file.type이 빈 문자열로 오면(일부 OS의 파일 선택 동작) storage.rules의
+    // contentType 검사에 걸려 업로드가 거부되므로 안전한 기본값을 채워 넣는다.
+    const contentType = uploadFile.type || (isVideo ? 'video/mp4' : 'image/jpeg')
+    await uploadBytes(storageRef, uploadFile, { contentType })
     uploadedRefs.push(storageRef)
-    media.push({ url: await getDownloadURL(storageRef), type: isVideo ? 'video' : 'image' })
+    const url = await getDownloadURL(storageRef)
+    // 영상은 Cloud Function이 H.264로 변환할 때까지 재생 불가 상태다.
+    // status가 없는(과거) media 항목은 읽는 쪽에서 'ready'로 취급한다.
+    media.push(isVideo ? { url, type: 'video', status: 'processing' } : { url, type: 'image' })
     onProgress?.(i + 1, files.length)
   }
   return { media, uploadedRefs }

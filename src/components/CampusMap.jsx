@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LOCATION_REGIONS } from '../lib/campusRegions'
 import Modal from './Modal'
+import PostVideo from './PostVideo'
 
 // 사용자가 직접 만든 손그림풍 캠퍼스 일러스트(school-map-3.webp)를 배경으로 쓴다.
 // 원본 PNG(school-map-3.png, 3.2MB)도 public/에 남겨 두었다 — 다시 압축할 일이 있을 때 쓴다.
@@ -290,7 +291,10 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
                 {!isPickerDot &&
                   (lead.thumbUrl ? (
                     lead.thumbType === 'video' ? (
-                      <video src={`${lead.thumbUrl}#t=0.1`} muted playsInline preload="metadata" />
+                      <PostVideo
+                        media={{ url: lead.thumbUrl, status: lead.thumbStatus, poster: lead.thumbPoster }}
+                        mode="thumb"
+                      />
                     ) : (
                       <img src={lead.thumbUrl} alt="" />
                     )
@@ -344,15 +348,15 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
                   {item.thumbUrl ? (
                     item.thumbType === 'video' ? (
                       <>
-                        <video
-                          src={`${item.thumbUrl}#t=0.1`}
-                          muted
-                          playsInline
-                          preload="metadata"
+                        <PostVideo
+                          media={{ url: item.thumbUrl, status: item.thumbStatus, poster: item.thumbPoster }}
+                          mode="thumb"
                         />
-                        <span className="cluster-play" aria-hidden="true">
-                          ▶
-                        </span>
+                        {!item.thumbStatus && (
+                          <span className="cluster-play" aria-hidden="true">
+                            ▶
+                          </span>
+                        )}
                       </>
                     ) : (
                       <img src={item.thumbUrl} alt="" />

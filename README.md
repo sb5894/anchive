@@ -52,7 +52,11 @@ node scripts/deployRules.mjs
 
 ## 사진·동영상 업로드
 
-- 사진은 클라이언트에서 자동 리사이즈(최대 1600px, JPEG) 후 업로드, 동영상은 원본 그대로(50MB 제한) 업로드된다.
+- 사진은 클라이언트에서 자동 리사이즈(최대 1600px, JPEG) 후 업로드된다(50MB 제한, 영상은 10MB).
+- 동영상은 원본(HEVC 등 어떤 코덱이든) 그대로 올라간 뒤, Storage 트리거 Cloud Function(`functions/index.js`)이
+  자동으로 H.264 + faststart로 다시 인코딩하고 포스터 이미지를 만든다. 변환이 끝나기 전에는
+  게시물 화면에 "영상 준비 중" 표시가 뜬다. 이 변환이 없으면 업로더 기기에서만 재생되고
+  다른 브라우저에서는 안 보이는 문제가 생긴다(HEVC는 Firefox 등에서 재생 불가).
 - 업로드 시 행사 종류를 "미분류"로 선택하면 특정 행사에 안 묶고 올릴 수 있다.
 
 ## 배포
@@ -63,6 +67,10 @@ npm install -g firebase-tools   # 최초 1회
 firebase login
 firebase deploy
 ```
+
+Cloud Functions는 Blaze(종량제) 요금제가 필요하다. `firebase deploy`는 `functions/` 안의
+의존성(`npm install`)을 자동으로 설치해서 배포하므로 따로 `npm install`을 미리 해 둘 필요는 없다.
+영상 변환만 다시 배포하려면 `firebase deploy --only functions`.
 
 ## 폴더 구조
 

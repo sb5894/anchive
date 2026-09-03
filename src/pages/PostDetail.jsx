@@ -4,6 +4,7 @@ import { useIdentity } from '../lib/IdentityContext'
 import CampusMap from '../components/CampusMap'
 import ConfirmDialog from '../components/ConfirmDialog'
 import IdentityPicker from '../components/IdentityPicker'
+import PostVideo from '../components/PostVideo'
 import { ETC_ID, ETC_NAME, locationIdForSpot, regionCenter } from '../lib/campusRegions'
 import { subscribeLocations } from '../lib/locations'
 import {
@@ -273,7 +274,7 @@ export default function PostDetail() {
         <div className="images" ref={trackRef} onScroll={handleTrackScroll}>
           {post.media?.map((m, i) =>
             m.type === 'video' ? (
-              <video key={m.url} src={m.url} controls playsInline />
+              <PostVideo key={m.url} media={m} mode="player" />
             ) : (
               <img
                 key={m.url}
@@ -385,7 +386,7 @@ export default function PostDetail() {
               {draftMedia.map((m, i) => (
                 <li key={m.url} className="file-preview">
                   {m.type === 'video' ? (
-                    <video src={`${m.url}#t=0.1`} muted playsInline preload="metadata" />
+                    <PostVideo media={m} mode="thumb" />
                   ) : (
                     <img src={m.url} alt="" />
                   )}
@@ -402,7 +403,7 @@ export default function PostDetail() {
               {newPreviews.map((p, i) => (
                 <li key={`new-${p.name}-${i}`} className="file-preview">
                   {p.isVideo ? (
-                    <video src={`${p.url}#t=0.1`} muted playsInline preload="metadata" />
+                    <PostVideo media={{ url: p.url }} mode="thumb" />
                   ) : (
                     <img src={p.url} alt="" />
                   )}

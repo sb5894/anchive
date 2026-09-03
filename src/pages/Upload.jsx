@@ -8,6 +8,7 @@ import { ETC_ID, ETC_NAME, locationIdForSpot, regionCenter } from '../lib/campus
 import CampusMap from '../components/CampusMap'
 import IdentityPicker from '../components/IdentityPicker'
 import Modal from '../components/Modal'
+import PostVideo from '../components/PostVideo'
 
 export default function Upload() {
   const navigate = useNavigate()
@@ -136,7 +137,7 @@ export default function Upload() {
                 {previews.map((p, i) => (
                   <li key={`${p.name}-${i}`} className="file-preview">
                     {p.isVideo ? (
-                      <video src={`${p.url}#t=0.1`} muted playsInline preload="metadata" />
+                      <PostVideo media={{ url: p.url }} mode="thumb" />
                     ) : (
                       <img src={p.url} alt="" />
                     )}

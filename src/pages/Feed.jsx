@@ -103,6 +103,8 @@ export default function Feed() {
           y: p.spot.y,
           thumbUrl: p.media?.[0]?.url,
           thumbType: p.media?.[0]?.type,
+          thumbStatus: p.media?.[0]?.status,
+          thumbPoster: p.media?.[0]?.poster,
         })),
     [posts]
   )
