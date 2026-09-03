@@ -21,7 +21,7 @@
 }
 
 h1 {
-  font-size: 22px;
+  font-size: 26px;
   margin: 0 0 4px;
 }
 
@@ -38,8 +38,137 @@ h1 {
 }
 
 .field label {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
+}
+
+/* 업로드 3단계를 눈으로 따라갈 수 있게 번호를 붙인다. */
+.field .step-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.step-num {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 꼭 해야 하는 단계 표시. 색만으로 뜻을 전달하지 않도록 옆에 '필수'라는
+   글자를 화면에서만 감춰 함께 넣는다(스크린리더는 읽는다). */
+.step-required {
+  color: var(--danger);
+  font-weight: 700;
+  margin-left: -4px;
+}
+
+.step-note {
+  flex-basis: 100%;
+  padding-left: 34px; /* 번호 배지 너비 + gap 만큼 들여써서 제목과 줄을 맞춘다 */
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* 화면에서만 감추고 스크린리더·키보드에는 남기는 공용 유틸리티. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 브라우저 기본 파일 버튼(input[type=file])은 모양을 바꿀 수 없어서
+   화면에서 숨기고, 이 label을 버튼처럼 꾸며 htmlFor로 연결해 대신 쓴다. */
+.file-pick-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 12px 16px;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.file-pick-btn:hover {
+  border-color: var(--accent);
+  background: var(--surface-alt);
+}
+
+.visually-hidden:focus-visible + .file-pick-btn {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.file-preview-grid {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+
+.file-preview {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
+.file-preview img,
+.file-preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 사진 위에 겹치므로 44px까지 키우면 사진을 다 가린다. 대신 충분히 크게(32px)
+   잡고 어두운 원형 배경으로 대비를 확보한다. */
+.file-preview-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 select,
@@ -61,9 +190,14 @@ button.primary {
   background: var(--accent);
   color: var(--accent-contrast);
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
 }
 
 button.primary:disabled {
@@ -71,23 +205,649 @@ button.primary:disabled {
   cursor: not-allowed;
 }
 
-.entry {
-  display: flex;
+button.primary.danger {
+  background: var(--danger);
+}
+
+button.primary.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+}
+
+/* 터치 기반 UI라 눌렀을 때 반응이 바로 보여야 한다. */
+.chip,
+.toggle-btn,
+.like-btn,
+.delete-btn,
+.ghost-btn,
+.whoami-btn,
+.spot-toggle,
+.spot-clear,
+.cluster-item,
+.card-delete-btn,
+.place-item,
+.map-zoom-controls button {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.chip:active,
+.toggle-btn:active,
+.like-btn:active:not(:disabled),
+.delete-btn:active,
+.ghost-btn:active,
+.whoami-btn:active,
+.spot-toggle:active,
+.spot-clear:active,
+.cluster-item:active,
+.card-delete-btn:active,
+.place-item:active,
+.map-zoom-controls button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.post-not-found {
   flex-direction: column;
-  padding-top: 15vh;
+  gap: 16px;
+  min-height: 50vh;
+  text-align: center;
+}
+
+.post-not-found a.primary {
+  display: inline-block;
+  padding: 12px 20px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.post-not-found a.primary:hover {
+  background: var(--accent-hover);
 }
 
 /* Feed */
+/* 이름 버튼이 헤더에서 빠져 제목만 남으므로 가운데 정렬한다. */
 .feed-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  text-align: center;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
-.whoami {
+/* 제목·양옆 마스코트를 한 줄에 놓는 행. 좁은 화면에서는 셋 다 vw 단위로
+   함께 줄어들어서, 어느 화면에서도 서로 부딪히거나 넘치지 않는다. */
+.brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 2vw, 10px);
+}
+
+/* 손글씨 폰트를 웹폰트로 받는 대신 제목 글자를 미리 SVG로 떠서 <img>로 넣는다
+   (scripts/make-title-svg.mjs). 그래서 여긴 font-size가 아니라 이미지 크기다. */
+.brand-title {
+  margin: 0;
+  line-height: 1;
+  flex: none;
+}
+
+.brand-title img {
+  display: block;
+  width: min(220px, 60vw);
+  height: auto;
+}
+
+/* 교표의 봉황을 등 쪽에서 잘라 제목 옆에 작게 둔 것 — 높이를 제목 글자
+   크기 정도로 맞추고, 폭은 원본 비율 그대로(width 미지정) 따라가게 한다. */
+.brand-mascot {
+  display: block;
+  flex: none;
+  height: clamp(26px, 11vw, 42px);
+  width: auto;
+}
+
+.brand-underline {
+  display: block;
+  width: min(200px, 60%);
+  height: 12px;
+  margin: 2px auto 0;
+  color: var(--point);
+}
+
+.brand-sub {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
+/* 관리자 화면은 제목과 로그아웃 버튼이 좌우로 놓여야 해서 가로 배치를 유지한다. */
+.page.admin .feed-header {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.whoami-btn {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-banner {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--warn-soft-bg);
+  border: 1px solid color-mix(in srgb, var(--warn-soft-text) 25%, transparent);
+  color: var(--warn-soft-text);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* 공용 태블릿에 관리자 로그인이 남아 다음 학생에게 넘어가지 않도록,
+   /admin까지 들어가지 않고 첫 화면에서 바로 로그아웃할 수 있게 한다. */
+.admin-signout {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--warn-soft-text) 40%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--warn-soft-text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 이름 고르기 모달 */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+
+.modal-sheet {
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 12px 32px rgba(var(--shadow-rgb), 0.16);
+}
+
+.modal-title {
+  font-size: 18px;
+  margin: 0 0 4px;
+}
+
+.modal-sub {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.modal-actions .primary {
+  flex: 1;
+}
+
+.ghost-btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.comment-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.comment-locked .primary {
+  width: auto;
+  padding: 10px 18px;
+}
+
+/* 관리자용 카드 삭제 버튼 */
+.post-card-wrap {
+  position: relative;
+}
+
+/* 사진 위에 겹쳐서(38x26px) 아이들이 호기심에 누를 여지가 컸던 것을, 사진 아래
+   전폭 행(44px)으로 옮겨 실수로 누르기 어렵게 한다. 비관리자에게는 아예 렌더되지
+   않으므로(onAdminDelete가 undefined) 일반 사용자의 격자 모양은 그대로다. */
+.card-delete-btn {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 8px;
+  border: none;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.map-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  /* 아이콘이 붙으면서 좁은 화면에서 한 줄에 안 들어가 가로 스크롤이 생겼다.
+     넘칠 땐 줄을 바꿔서 화면 밖으로 밀려나지 않게 한다. */
+  flex-wrap: wrap;
+}
+
+/* 좁은 화면에서는 간격·여백을 줄여 되도록 한 줄에 들어가게 한다. */
+@media (max-width: 420px) {
+  .map-toolbar {
+    gap: 6px;
+  }
+
+  .map-toolbar .toggle-btn {
+    padding: 8px 9px;
+    gap: 4px;
+  }
+
+  .map-toolbar .chip {
+    padding: 8px 9px;
+    gap: 4px;
+  }
+
+  .toggle-btn,
+  .place-chip,
+  .help-chip {
+    font-size: 14px;
+  }
+}
+
+/* 장소 필터는 '보기 방식'(지도/모아 보기)과 성격이 달라 툴바에서 한 줄 아래로 뺐다. */
+.place-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.place-chip {
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+/* 아이콘과 글자를 나란히 놓기 위한 공통 정렬 */
+.toggle-btn,
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ui-icon {
+  flex: none;
+}
+
+.toggle-btn {
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toggle-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), 0.1);
+}
+
+.map-section {
+  margin-bottom: 8px;
+}
+
+.map-help {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+.campus-map-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--map-sky);
+  margin-bottom: 4px;
+  /* touch-action은 CampusMap.jsx에서 확대 배율에 따라 인라인으로 설정한다 —
+     기본 배율에서는 페이지 세로 스크롤을 허용하고, 확대 상태에서만 앱이
+     손가락 제스처를 직접 처리하도록 브라우저 기본 동작을 막는다. */
+}
+
+.campus-map-wrap.pickable {
+  cursor: crosshair;
+}
+
+.spot-toggle {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.spot-clear {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--danger);
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.campus-map-illustration {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* 확대/축소되는 레이어. 지도 그림과 그 위 요소들이 함께 커진다. */
+/* 확대·이동 계산을 단순하게 하려고 기준점을 왼쪽 위로 둔다. */
+.campus-map-zoomer {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  transition: transform 0.2s ease-out;
+}
+
+.map-region {
+  position: absolute;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 8px;
+}
+
+.map-region.active {
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.85);
+}
+
+.pick-list-title {
+  margin-top: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.picked-where {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--accent-soft-bg);
+  border: 1px solid color-mix(in srgb, var(--accent-soft-text) 30%, transparent);
+  color: var(--accent-soft-text);
+  font-size: 15px;
+}
+
+.picked-where.empty-where {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.map-region:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* 지도 위 사진 스팟(포토스팟) */
+.map-spot {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(var(--shadow-rgb), 0.26);
+  cursor: pointer;
+  overflow: visible;
+  z-index: 2;
+}
+
+.map-spot img,
+.map-spot video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.map-spot-blank {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.map-spot-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* 업로드 화면에서 콕 찍은 위치 표시용 */
+.map-spot.picked {
+  width: 22px;
+  height: 22px;
+  background: radial-gradient(circle at 35% 30%, #ffb3ab, #f75d59);
+  cursor: default;
+  /* 찍어둔 자리 위를 다시 눌러도 클릭이 아래 지도(wrap)로 통과해 위치를 옮길 수 있게 한다. */
+  pointer-events: none;
+}
+
+.map-spot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.campus-map-outer {
+  position: relative;
+}
+
+/* 화면 우하단에 고정된 "올리기" 버튼과 같은 모서리에서 만나 헷갈리던 문제가 있어
+   지도의 오른쪽 위로 옮겼다. */
+.map-zoom-controls {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 3;
+}
+
+.map-zoom-controls button {
+  min-width: 52px;
+  height: 44px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.18);
+}
+
+.map-zoom-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 여러 장이 겹친 스팟을 눌렀을 때 뜨는 목록 */
+.cluster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cluster-item {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--border);
+  cursor: pointer;
+}
+
+.cluster-item img,
+.cluster-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cluster-play {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 10px;
+  line-height: 20px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* 장소 고르기 모달 안의 세로 목록 */
+.place-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.place-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.place-item.active {
+  background: var(--accent-soft-bg);
+  border-color: color-mix(in srgb, var(--accent-soft-text) 30%, transparent);
+  color: var(--accent-soft-text);
+}
+
+.place-item-count {
+  font-family: var(--mono);
   font-size: 14px;
   color: var(--text-muted);
+}
+
+.place-item.active .place-item-count {
+  color: inherit;
 }
 
 .event-filter {
@@ -110,27 +870,25 @@ button.primary:disabled {
 }
 
 .chip.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--accent-soft-bg);
+  border-color: color-mix(in srgb, var(--accent-soft-text) 30%, transparent);
+  color: var(--accent-soft-text);
 }
 
+/* 인스타처럼 사진이 서로 붙고 화면 끝까지 닿게 한다. .page의 좌우 여백을 상쇄. */
 .post-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-}
-
-@media (min-width: 600px) {
-  .post-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-left: -16px;
+  margin-right: -16px;
 }
 
 @media (min-width: 900px) {
   .post-grid {
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 
@@ -143,8 +901,8 @@ button.primary:disabled {
 .post-card-image {
   position: relative;
   aspect-ratio: 1;
-  background: var(--border);
-  border-radius: 4px;
+  background: var(--surface-alt);
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -184,84 +942,58 @@ button.primary:disabled {
   pointer-events: none;
 }
 
-.post-card-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--text-muted);
-  padding: 4px 2px;
-}
-
 .empty {
   grid-column: 1 / -1;
   text-align: center;
   color: var(--text-muted);
-  padding: 40px 0;
+  padding: 40px 16px;
 }
 
+/* 기호만 있으면 지도 확대(＋)와 구분이 안 돼서, 글자를 넣은 알약형으로 바꿨다. */
 .fab {
   position: fixed;
   bottom: 24px;
-  right: max(24px, calc((100vw - 900px) / 2 + 24px));
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  right: max(16px, calc((100vw - 900px) / 2 + 16px));
+  min-height: 52px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 999px;
   background: var(--accent);
   color: var(--accent-contrast);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  gap: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
   text-decoration: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 14px rgba(var(--shadow-rgb), 0.22);
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.fab:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.fab:active {
+  transform: scale(0.96);
 }
 
 /* Upload */
 .hint {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-muted);
   margin: 4px 0 0;
 }
 
-.file-list {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.file-list li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 13px;
-}
-
-.file-list li span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.file-list li button {
-  border: none;
-  background: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 14px;
-  flex: none;
-}
-
 .error {
   color: var(--danger);
-  font-size: 14px;
+  font-size: 15px;
   margin: 0 0 12px;
 }
 
@@ -273,12 +1005,190 @@ button.primary:disabled {
   text-decoration: none;
 }
 
+/* 사진을 꾹 눌렀을 때 뜨는 저장 메뉴와 텍스트 선택을 막는다.
+   스크린샷은 막지 못한다(웹에서 불가능) — App.jsx의 우클릭·드래그 차단과
+   함께 저장·퍼가기를 어렵게 만드는 것까지가 웹에서 할 수 있는 전부다. */
+.images img,
+.images video,
+.post-card-image img,
+.post-card-image video,
+.map-spot img,
+.map-spot video,
+.cluster-item img,
+.cluster-item video,
+.file-preview img,
+.file-preview video {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* 여러 장을 옆으로 넘겨 보는 뷰어. 트랙 자체가 가로 스크롤이라
+   터치 기기에서는 스와이프가 그대로 동작하고, ‹ › 버튼은 그 위에 얹는다. */
+.media-viewer {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.images {
+  display: flex;
+  /* 기본값 stretch 때문에 가로 사진이 세로 사진 높이에 맞춰 늘어나 찌그러졌다. */
+  align-items: center;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: 8px;
+  /* 비율이 다른 사진은 위아래에 여백이 생기므로 배경을 깔아 의도한 여백으로 보이게 한다. */
+  background: var(--surface-alt);
+}
+
+.images::-webkit-scrollbar {
+  display: none;
+}
+
 .images img,
 .images video {
+  flex: 0 0 100%;
   width: 100%;
+  height: auto;
+  /* 세로로 아주 긴 사진이 화면을 다 먹지 않도록 상한을 둔다. */
+  max-height: 70vh;
+  /* max-height가 걸렸을 때도 비율을 억지로 바꾸지 않는다. */
+  object-fit: contain;
+  scroll-snap-align: center;
   border-radius: 8px;
-  margin-bottom: 8px;
   display: block;
+}
+
+.media-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.25);
+}
+
+.media-nav.prev {
+  left: 8px;
+}
+
+.media-nav.next {
+  right: 8px;
+}
+
+.media-nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.media-counter {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  margin: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.spot-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.spot-toggle-btn,
+.change-name-btn {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 누구 이름으로 쓰는지 알려주는 줄 (업로드·댓글 공통) */
+.writing-as {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  font-size: 15px;
+}
+
+.help-chip {
+  flex: none;
+}
+
+.help-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+
+.help-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.help-list strong {
+  font-size: 15px;
+}
+
+.help-list span {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+/* 사용법 맨 아래 약속 문구. 경고가 아니라 안내 톤이라 accent-soft 색을 쓴다
+   (--warn-soft는 관리자 배너가 쓰는 경고색이라 여기서는 어울리지 않는다). */
+.promise-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.promise-note strong {
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .post-meta {
@@ -302,13 +1212,37 @@ button.primary:disabled {
   cursor: pointer;
 }
 
+.like-btn.active {
+  background: var(--like-soft-bg);
+  border-color: color-mix(in srgb, var(--like) 35%, transparent);
+  color: var(--like);
+}
+
+.like-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .caption {
   margin-bottom: 20px;
   white-space: pre-wrap;
 }
 
-.caption-edit {
-  margin-bottom: 20px;
+.edit-panel {
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-actions .primary {
+  flex: 1;
 }
 
 .comments h2 {
@@ -322,7 +1256,8 @@ button.primary:disabled {
 }
 
 .comment-author {
-  font-size: 13px;
+  font-family: var(--mono);
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -375,11 +1310,19 @@ button.primary:disabled {
 
 .comment-form button {
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: none;
   background: var(--accent);
   color: var(--accent-contrast);
   cursor: pointer;
+  transition: background-color 0.15s ease;
+  flex: none; /* 자리가 좁아도 버튼은 줄이지 않는다 */
+  white-space: nowrap; /* '등록'이 한 자씩 줄바꿈되지 않게 한다 */
+  min-height: 44px; /* 다른 버튼들과 같은 터치 크기 */
+}
+
+.comment-form button:hover {
+  background: var(--accent-hover);
 }
 
 /* Admin */
@@ -388,6 +1331,42 @@ button.primary:disabled {
   flex-direction: column;
   gap: 10px;
   max-width: 320px;
+}
+
+.admin-go-feed {
+  display: block;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.admin-go-feed:hover {
+  background: var(--accent-hover);
+}
+
+.admin-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.admin-section h2 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.log-empty {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
 }
 
 .log-item {
@@ -399,8 +1378,22 @@ button.primary:disabled {
   font-size: 14px;
 }
 
+.log-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.log-item > span:first-child {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
 .history-entry {
   font-size: 12px;
   color: var(--text-muted);
-  padding: 2px 0;
+  padding: 2px 0 2px 10px;
+  border-left: 2px solid var(--border);
+  margin-top: 4px;
 }

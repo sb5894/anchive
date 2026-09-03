@@ -1,6 +1,14 @@
-// 지도(캠퍼스맵) 디자인 전용 "장소" 컬렉션 시드 스크립트.
-// 기존 events 컬렉션(행사 종류)과는 별개로 분리해서, 다른 디자인 시안에 영향 없게 한다.
-// 실제 학교 건물 배치도 기준으로 반영(2026-08-22 업데이트).
+// 사용법: node scripts/seedLocations.mjs
+// 캠퍼스 지도의 "장소" 목록을 locations 컬렉션에 넣는다.
+//
+// 이 목록은 src/lib/campusRegions.js의 LOCATION_REGIONS 키와 id가 정확히 같아야 한다.
+// CampusMap이 LOCATION_REGIONS[문서 id]로 히트 영역을 찾기 때문에, id가 어긋나면
+// 그 건물은 지도에서 눌러도 반응하지 않는다.
+//
+// 기존 장소들은 원래 Firebase 콘솔에서 손으로 만들어져 있어서 저장소에 기록이 없었다.
+// 다시 만들 수 있도록 여기에 전부 적어 둔다. set()이라 여러 번 실행해도 안전하다.
+// ('기타'는 Firestore에 두지 않는다 — 어느 구역에도 안 걸린 사진에 화면에서만 붙이는 이름)
+
 import { readFileSync } from 'fs'
 import { initializeApp, cert } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
@@ -20,23 +28,19 @@ const locations = [
   { id: 'bongwan', name: '본관' },
   { id: 'kindergarten', name: '유치원' },
   { id: 'singwan', name: '신관' },
-  { id: 'bibonghall', name: '비봉관' },
   { id: 'playground', name: '운동장' },
-  { id: 'play-area', name: '놀이터' },
+  { id: 'kinder-play', name: '유치원 놀이터' },
   { id: 'garden', name: '두손이텃밭' },
   { id: 'forest', name: '학교숲' },
+  { id: 'play-area', name: '놀이터' },
+  { id: 'bibonghall', name: '비봉관' },
+  { id: 'tennis-court', name: '정구장' },
 ]
-
-// 기존에 있던 도서관/급식실/정문/이전 버전의 본관·별관 id는 실제 배치도와 안 맞아서 정리
-const OLD_IDS_TO_REMOVE = ['library', 'cafeteria', 'gate', 'main-building', 'annex']
 
 const batch = db.batch()
 for (const loc of locations) {
   const { id, ...data } = loc
   batch.set(db.collection('locations').doc(id), data)
 }
-for (const id of OLD_IDS_TO_REMOVE) {
-  batch.delete(db.collection('locations').doc(id))
-}
 await batch.commit()
-console.log(`locations 컬렉션 업데이트 완료: ${locations.length}개 등록, ${OLD_IDS_TO_REMOVE.length}개 제거`)
+console.log(`locations 컬렉션에 ${locations.length}개 업로드 완료`)

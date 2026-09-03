@@ -6,12 +6,7 @@ import {
   query,
   where,
 } from 'firebase/firestore'
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-} from 'firebase/auth'
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { auth, db } from '../firebase'
 
 export function subscribeAdminAuth(callback) {
@@ -24,11 +19,6 @@ export function adminSignIn(email, password) {
 
 export function adminSignOut() {
   return signOut(auth)
-}
-
-// 최초 관리자 계정 생성용 (1회만 사용, 이후 콘솔에서 계정 관리 권장)
-export function adminSignUp(email, password) {
-  return createUserWithEmailAndPassword(auth, email, password)
 }
 
 export function subscribeDeletedPosts(callback) {

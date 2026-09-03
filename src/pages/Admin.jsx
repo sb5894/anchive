@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   adminSignIn,
   adminSignOut,
@@ -47,6 +48,9 @@ export default function Admin() {
   if (!user || user.isAnonymous) {
     return (
       <div className="page admin-login">
+        <Link to="/" className="back">
+          ← 지도로
+        </Link>
         <h1>관리자 로그인</h1>
         <form onSubmit={handleLogin}>
           <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -68,13 +72,23 @@ export default function Admin() {
   return (
     <div className="page admin">
       <header className="feed-header">
-        <h1>관리자 로그</h1>
-        <button onClick={() => adminSignOut()}>로그아웃</button>
+        <div className="brand">
+          <h1>관리자 로그</h1>
+          <p className="brand-sub">지우거나 고친 기록이 모두 남아요</p>
+        </div>
+        <button className="whoami-btn" onClick={() => adminSignOut()}>
+          로그아웃
+        </button>
       </header>
 
-      <section>
+      {/* 실제 삭제는 지도·피드 화면에서 하므로 그쪽으로 가는 길을 크게 열어둔다 */}
+      <Link to="/" className="admin-go-feed">
+        지도로 가서 글·댓글 관리하기
+      </Link>
+
+      <section className="admin-section">
         <h2>삭제된 게시물</h2>
-        {deletedPosts.length === 0 && <p className="empty">없음</p>}
+        {deletedPosts.length === 0 && <p className="log-empty">아직 없어요</p>}
         {deletedPosts.map((p) => (
           <div key={p.id} className="log-item">
             <span>
@@ -85,9 +99,9 @@ export default function Admin() {
         ))}
       </section>
 
-      <section>
+      <section className="admin-section">
         <h2>수정된 게시물</h2>
-        {editedPosts.length === 0 && <p className="empty">없음</p>}
+        {editedPosts.length === 0 && <p className="log-empty">아직 없어요</p>}
         {editedPosts.map((p) => (
           <div key={p.id} className="log-item">
             <span>
@@ -98,7 +112,8 @@ export default function Admin() {
               <summary>이력 ({p.history?.length || 0})</summary>
               {p.history?.map((h, i) => (
                 <div key={i} className="history-entry">
-                  {h.caption}
+                  {h.changed?.length > 0 && <strong>{h.changed.join(', ')} 바뀜</strong>}
+                  {h.caption ? ` ${h.caption}` : ''}
                 </div>
               ))}
             </details>
@@ -106,9 +121,9 @@ export default function Admin() {
         ))}
       </section>
 
-      <section>
+      <section className="admin-section">
         <h2>수정/삭제된 댓글</h2>
-        {editedComments.length === 0 && <p className="empty">없음</p>}
+        {editedComments.length === 0 && <p className="log-empty">아직 없어요</p>}
         {editedComments.map((c) => (
           <div key={c.id} className="log-item">
             <span>
