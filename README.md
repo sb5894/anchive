@@ -22,12 +22,16 @@
 Firestore Admin 권한이 필요해서 관리 스크립트로 넣는다.
 
 1. Firebase 콘솔 > 프로젝트 설정 > 서비스 계정 > "새 비공개 키 생성" → 받은 JSON을 프로젝트 루트에 `serviceAccountKey.json`으로 저장 (git에 올라가지 않음)
-2. 명단 CSV 준비 (`scripts/roster.sample.csv` 형식 참고: `grade,class,number,name`)
+2. 명단 CSV 준비 (`scripts/roster.sample.csv` 형식 참고: `grade,class,number,name`). **실제 학생 이름이 든 CSV는 절대 커밋하지 않는다** —
+   `scripts/roster.csv`라는 이름으로 저장하면 `.gitignore`에 이미 걸려 있어 안전하다.
 3. 실행
    ```bash
-   node scripts/importRoster.mjs path/to/roster.csv
+   node scripts/importRoster.mjs scripts/roster.csv
    node scripts/seedEvents.mjs
    ```
+   `importRoster.mjs`는 실행할 때마다 **roster 컬렉션을 통째로 비우고** CSV 내용으로 다시 채운다(추가가 아니라 교체) —
+   그래야 이전에 넣어 둔 테스트 명단이 실제 명단과 섞여 남지 않는다. 웹사이트는 Firestore에서 명단을 직접 읽으므로
+   이 스크립트를 실행하면 **다시 빌드·배포하지 않아도 바로 반영**된다(브라우저에서 새로고침만 하면 됨).
    `seedEvents.mjs` 안의 행사 목록은 실제 행사 종류에 맞게 직접 수정 후 실행.
 
 ## 관리자 계정 만들기

@@ -1,6 +1,10 @@
 // 사용법: node scripts/importRoster.mjs path/to/roster.csv
 // 필요: 프로젝트 루트에 serviceAccountKey.json (Firebase 콘솔 > 프로젝트 설정 > 서비스 계정 > 새 비공개 키 생성)
 // CSV 형식: grade,class,number,name (헤더 포함)
+//
+// roster 컬렉션을 통째로 비우고 CSV 내용으로 다시 채운다(추가가 아니라 교체).
+// 그래야 이전에 넣어 둔 테스트/가짜 명단이 실제 명단과 섞여 남지 않는다 —
+// 안 지우면 IdentityPicker에 존재하지 않는 학생이 계속 뜬다.
 
 import { readFileSync } from 'fs'
 import { parse } from 'csv-parse/sync'
@@ -30,16 +34,29 @@ function readCsvText(filePath) {
 }
 
 const rows = parse(readCsvText(csvPath), { columns: true, skip_empty_lines: true })
+const rosterRef = db.collection('roster')
 
-const batch = db.batch()
-for (const row of rows) {
-  const grade = Number(row.grade)
-  const klass = Number(row.class)
-  const number = Number(row.number)
-  const name = row.name.trim()
-  const id = `${grade}-${klass}-${number}`
-  batch.set(db.collection('roster').doc(id), { grade, class: klass, number, name })
+// Firestore 배치는 최대 500건이라 여유를 두고 400건씩 나눠 커밋한다.
+async function commitInChunks(ops) {
+  for (let i = 0; i < ops.length; i += 400) {
+    const batch = db.batch()
+    for (const op of ops.slice(i, i + 400)) op(batch)
+    await batch.commit()
+  }
 }
 
-await batch.commit()
+const existing = await rosterRef.get()
+await commitInChunks(existing.docs.map((d) => (batch) => batch.delete(d.ref)))
+console.log(`기존 roster ${existing.size}명 삭제 완료`)
+
+await commitInChunks(
+  rows.map((row) => {
+    const grade = Number(row.grade)
+    const klass = Number(row.class)
+    const number = Number(row.number)
+    const name = row.name.trim()
+    const id = `${grade}-${klass}-${number}`
+    return (batch) => batch.set(rosterRef.doc(id), { grade, class: klass, number, name })
+  })
+)
 console.log(`roster 컬렉션에 ${rows.length}명 업로드 완료`)
