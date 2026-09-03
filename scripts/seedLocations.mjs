@@ -33,6 +33,7 @@ const locations = [
   { id: 'garden', name: '두손이텃밭' },
   { id: 'forest', name: '학교숲' },
   { id: 'play-area', name: '놀이터' },
+  { id: 'zelkova', name: '느티나무' },
   { id: 'bibonghall', name: '비봉관' },
   { id: 'tennis-court', name: '정구장' },
 ]

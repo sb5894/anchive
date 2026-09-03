@@ -1,4 +1,4 @@
-// 캠퍼스 지도(school-map-3.webp) 위의 건물·구역 영역 정의.
+// 캠퍼스 지도(school-map-4.webp) 위의 건물·구역 영역 정의.
 //
 // 이 파일 하나가 두 가지 역할을 동시에 한다:
 //   1) 지도에서 건물을 눌러 장소를 고르는 히트 영역
@@ -7,10 +7,10 @@
 //
 // 좌표는 모두 지도 이미지 기준 퍼센트(왼쪽 위가 0,0).
 
-// 각 값은 school-map-3.webp(1024x1536)의 픽셀 경계를 색상으로 검출해 맞춘 것이다.
+// 각 값은 school-map-4.webp(1024x1536)의 픽셀 경계를 색상으로 검출해 맞춘 것이다.
 // 건물 사이 통로나 가장자리 나무처럼 어디에도 안 속하는 자리는 일부러 비워 두고 '기타'가 되게 한다.
 // 특히 아래 세 곳은 요청에 따라 의도적으로 비워 두었다:
-//   - 본관~비봉관을 잇는 무지개 통로(x 73~79.5% 띠, y 38~72%)
+//   - 본관~비봉관을 잇는 무지개 통로(x 73~79.5% 띠, y 38~72% — 단 y 55~70%는 zelkova가 차지)
 //   - 운동장~정문을 잇는 통로(y 66~69% 띠, x 49~67%)
 //   - 정문, 후문
 //
@@ -28,6 +28,8 @@ export const LOCATION_REGIONS = {
   garden: { left: 8, top: 58, width: 15, height: 8 },
   forest: { left: 4, top: 66, width: 22, height: 15.5 },
   'play-area': { left: 26, top: 69, width: 23, height: 12 },
+  // 비봉관 오른쪽 위, 유치원 놀이터 아래의 느티나무(school-map-4에서 새로 추가된 나무).
+  zelkova: { left: 78, top: 55, width: 22, height: 15 },
   bibonghall: { left: 67, top: 72, width: 27, height: 22 },
   'tennis-court': { left: 12, top: 81.5, width: 32, height: 14 },
 }

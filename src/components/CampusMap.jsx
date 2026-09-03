@@ -4,8 +4,10 @@ import { LOCATION_REGIONS } from '../lib/campusRegions'
 import Modal from './Modal'
 import PostVideo from './PostVideo'
 
-// 사용자가 직접 만든 손그림풍 캠퍼스 일러스트(school-map-3.webp)를 배경으로 쓴다.
-// 원본 PNG(school-map-3.png, 3.2MB)도 public/에 남겨 두었다 — 다시 압축할 일이 있을 때 쓴다.
+// 사용자가 직접 만든 손그림풍 캠퍼스 일러스트(school-map-4.webp)를 배경으로 쓴다.
+// 원본 PNG(school-map-4.png, 3.0MB)도 public/에 남겨 두었다 — 다시 압축할 일이 있을 때 쓴다.
+// (느티나무를 추가하면서 school-map-3 → school-map-4로 교체. 이미지 크기는 그대로
+// 1024x1536이라 기존 LOCATION_REGIONS 퍼센트 좌표는 다시 잴 필요 없었다.)
 // 지도 위에는 "학생들이 찍은 사진"만 올려서 포토스팟 지도처럼 보이게 하고,
 // 장소 선택은 건물 영역 클릭(아래 map-region)과 지도 밖 칩 목록으로 처리한다.
 // onMapClick이 주어지면(업로드 화면) 지도를 탭해 정확한 촬영 위치를 콕 찍는 모드로 동작한다.
@@ -234,7 +236,7 @@ export default function CampusMap({ categories, activeId, onSelect, spots, spot,
             transition: gesturing ? 'none' : undefined,
           }}
         >
-          <img className="campus-map-illustration" src="/school-map-3.webp" alt="" aria-hidden="true" />
+          <img className="campus-map-illustration" src="/school-map-4.webp" alt="" aria-hidden="true" />
 
 
           {/* 건물 영역을 눌러도 그 장소가 선택되게 하는 넓은 히트 영역(콕 찍기 모드에서는 숨김) */}

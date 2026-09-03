@@ -26,8 +26,8 @@ const db = getFirestore()
 
 // 엑셀(윈도우)에서 내보낸 CSV는 대개 EUC-KR/CP949라 UTF-8로 읽으면 한글이 깨진다.
 // UTF-8로 유효하게 디코딩되지 않으면 CP949로 다시 디코딩한다.
-// 엑셀의 "CSV UTF-8" 저장 옵션은 파일 맨 앞에 BOM을 붙이는데, 그대로 두면
-// 첫 헤더가 "grade"가 아니라 "﻿grade"가 되어 컬럼을 못 찾는다.
+// 엑셀의 "CSV UTF-8" 저장 옵션은 파일 맨 앞에 BOM(U+FEFF)을 붙이는데, 그대로 두면
+// 첫 헤더가 "grade"가 아니라 BOM이 붙은 문자열이 되어 컬럼을 못 찾는다.
 function readCsvText(filePath) {
   const buf = readFileSync(filePath)
   let utf8 = buf.toString('utf-8')
