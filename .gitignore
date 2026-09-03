@@ -16,6 +16,10 @@ dist-ssr
 .env
 serviceAccountKey.json
 
+# 실제 학생 명단(이름 포함) — 공개 저장소에 절대 올라가면 안 된다.
+# scripts/roster.sample.csv(가짜 데이터)만 추적한다.
+scripts/roster.csv
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
