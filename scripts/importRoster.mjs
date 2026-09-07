@@ -2,6 +2,14 @@
 // 필요: 프로젝트 루트에 serviceAccountKey.json (Firebase 콘솔 > 프로젝트 설정 > 서비스 계정 > 새 비공개 키 생성)
 // CSV 형식: grade,class,number,name (헤더 포함)
 //
+// grade/class는 숫자와 한글을 모두 받는다 — 유치원은 학년이 없고 반 이름이
+// '햇살반'처럼 한글이기 때문이다. 교사는 번호가 없으므로 99번으로 약속한다
+// (src/lib/identityLabel.js의 TEACHER_NUMBER). 번호 칸을 비우면 안 된다.
+//
+//   유치원,햇살반,3,김유치
+//   유치원,햇살반,99,박선생
+//   3,2,15,이학생
+//
 // roster 컬렉션을 통째로 비우고 CSV 내용으로 다시 채운다(추가가 아니라 교체).
 // 그래야 이전에 넣어 둔 테스트/가짜 명단이 실제 명단과 섞여 남지 않는다 —
 // 안 지우면 IdentityPicker에 존재하지 않는 학생이 계속 뜬다.
@@ -48,18 +56,60 @@ async function commitInChunks(ops) {
   }
 }
 
+// '3'은 숫자 3으로, '햇살반'은 문자열 그대로 저장한다.
+// 화면(src/lib/identityLabel.js)이 숫자면 'N학년/N반', 문자면 그대로 붙여 쓴다.
+function parseField(value) {
+  const text = String(value ?? '').trim()
+  if (text === '') return ''
+  return Number.isNaN(Number(text)) ? text : Number(text)
+}
+
+// 문서 id는 `학년-반-번호`라서 이 셋이 겹치면 batch.set이 앞사람을 덮어쓴다.
+// 그러면 명단이 조용히 사라지는데 로그에는 CSV 줄 수가 그대로 찍혀 알아챌 수가 없다.
+// 그래서 업로드 전에 전부 검사하고, 문제가 있으면 아무것도 쓰지 않고 멈춘다.
+const entries = rows.map((row, i) => {
+  const grade = parseField(row.grade)
+  const klass = parseField(row.class)
+  const number = parseField(row.number)
+  const name = String(row.name ?? '').trim()
+  return { line: i + 2, grade, class: klass, number, name, id: `${grade}-${klass}-${number}` }
+})
+
+const problems = []
+for (const e of entries) {
+  const blanks = ['grade', 'class', 'number', 'name'].filter((k) => e[k] === '')
+  if (blanks.length > 0) {
+    problems.push(`${e.line}행: ${blanks.join(', ')} 칸이 비어 있음 (${e.name || '이름 없음'})`)
+  }
+}
+
+const seen = new Map()
+for (const e of entries) {
+  const first = seen.get(e.id)
+  if (first) {
+    problems.push(`${first.line}행 "${first.name}"과 ${e.line}행 "${e.name}"이 같은 자리(${e.id})`)
+  } else {
+    seen.set(e.id, e)
+  }
+}
+
+if (problems.length > 0) {
+  console.error('CSV에 문제가 있어 업로드하지 않았습니다. 고친 뒤 다시 실행하세요.\n')
+  for (const p of problems) console.error(`  - ${p}`)
+  console.error('\n학년-반-번호가 같으면 한 명만 남고 나머지는 사라집니다.')
+  console.error('교사는 번호를 비우지 말고 99번으로 넣으세요.')
+  process.exit(1)
+}
+
 const existing = await rosterRef.get()
 await commitInChunks(existing.docs.map((d) => (batch) => batch.delete(d.ref)))
 console.log(`기존 roster ${existing.size}명 삭제 완료`)
 
 await commitInChunks(
-  rows.map((row) => {
-    const grade = Number(row.grade)
-    const klass = Number(row.class)
-    const number = Number(row.number)
-    const name = row.name.trim()
-    const id = `${grade}-${klass}-${number}`
-    return (batch) => batch.set(rosterRef.doc(id), { grade, class: klass, number, name })
-  })
+  entries.map(
+    ({ id, grade, class: klass, number, name }) =>
+      (batch) =>
+        batch.set(rosterRef.doc(id), { grade, class: klass, number, name })
+  )
 )
-console.log(`roster 컬렉션에 ${rows.length}명 업로드 완료`)
+console.log(`roster 컬렉션에 ${entries.length}명 업로드 완료`)

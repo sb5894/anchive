@@ -8,6 +8,7 @@ import {
   subscribeEditedComments,
   subscribeEditedPosts,
 } from '../lib/admin'
+import { whoLabel } from '../lib/identityLabel'
 
 export default function Admin() {
   const [user, setUser] = useState(undefined)
@@ -91,9 +92,7 @@ export default function Admin() {
         {deletedPosts.length === 0 && <p className="log-empty">아직 없어요</p>}
         {deletedPosts.map((p) => (
           <div key={p.id} className="log-item">
-            <span>
-              {p.authorInfo?.grade}-{p.authorInfo?.class} {p.authorInfo?.name}
-            </span>
+            <span>{whoLabel(p.authorInfo)}</span>
             <span>{p.caption}</span>
           </div>
         ))}
@@ -104,9 +103,7 @@ export default function Admin() {
         {editedPosts.length === 0 && <p className="log-empty">아직 없어요</p>}
         {editedPosts.map((p) => (
           <div key={p.id} className="log-item">
-            <span>
-              {p.authorInfo?.grade}-{p.authorInfo?.class} {p.authorInfo?.name}
-            </span>
+            <span>{whoLabel(p.authorInfo)}</span>
             <span>현재: {p.caption}</span>
             <details>
               <summary>이력 ({p.history?.length || 0})</summary>
@@ -126,9 +123,7 @@ export default function Admin() {
         {editedComments.length === 0 && <p className="log-empty">아직 없어요</p>}
         {editedComments.map((c) => (
           <div key={c.id} className="log-item">
-            <span>
-              {c.authorInfo?.grade}-{c.authorInfo?.class} {c.authorInfo?.name}
-            </span>
+            <span>{whoLabel(c.authorInfo)}</span>
             <span>{c.deleted ? '삭제됨' : '수정됨'}: {c.text}</span>
             <details>
               <summary>이력 ({c.history?.length || 0})</summary>

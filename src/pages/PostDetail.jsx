@@ -6,6 +6,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import IdentityPicker from '../components/IdentityPicker'
 import PostVideo from '../components/PostVideo'
 import { ETC_ID, ETC_NAME, locationIdForSpot, regionCenter } from '../lib/campusRegions'
+import { whoLabel } from '../lib/identityLabel'
 import { subscribeLocations } from '../lib/locations'
 import {
   addComment,
@@ -255,7 +256,7 @@ export default function PostDetail() {
   const canDeletePost = post.authorUid === uid || isAdmin
 
   // 감싸는 라벨이 없는 화면이라(카드와 달리) alt이 스크린리더의 유일한 정보원이다.
-  const mediaAltBase = `${post.authorInfo?.grade}-${post.authorInfo?.class} ${post.authorInfo?.name}님이 올린 사진`
+  const mediaAltBase = `${whoLabel(post.authorInfo)}님이 올린 사진`
 
   return (
     <div className="page post-detail">
@@ -317,9 +318,7 @@ export default function PostDetail() {
       {actionError && !editing && <p className="error">{actionError}</p>}
 
       <div className="post-meta">
-        <span className="author">
-          {post.authorInfo?.grade}-{post.authorInfo?.class} {post.authorInfo?.name}
-        </span>
+        <span className="author">{whoLabel(post.authorInfo)}</span>
         <button
           className={liked ? 'like-btn active' : 'like-btn'}
           onClick={handleToggleLike}
@@ -530,9 +529,7 @@ export default function PostDetail() {
           .filter((c) => !c.deleted)
           .map((c) => (
             <div key={c.id} className="comment">
-              <span className="comment-author">
-                {c.authorInfo?.grade}-{c.authorInfo?.class} {c.authorInfo?.name}
-              </span>
+              <span className="comment-author">{whoLabel(c.authorInfo)}</span>
               {editingId === c.id ? (
                 <div className="comment-edit">
                   <input value={editText} onChange={(e) => setEditText(e.target.value)} />
@@ -569,10 +566,7 @@ export default function PostDetail() {
                 앞사람 이름으로 올라가는 걸 여기서 알아채고 바꿀 수 있다. */}
             <p className="writing-as">
               <span>
-                <strong>
-                  {identity.grade}-{identity.class} {identity.name}
-                </strong>{' '}
-                이름으로 남겨요
+                <strong>{whoLabel(identity)}</strong> 이름으로 남겨요
               </span>
               <button type="button" className="change-name-btn" onClick={() => setShowPicker(true)}>
                 바꾸기

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { loadRoster } from '../lib/roster'
 import { useIdentity } from '../lib/IdentityContext'
+import { classLabel, compareGrade, gradeLabel, rosterOptionLabel } from '../lib/identityLabel'
 import Modal from './Modal'
 
 // 사진 올리기·댓글 쓰기처럼 "누가 썼는지"가 필요한 순간에만 띄우는 이름 선택 모달.
@@ -26,21 +27,20 @@ export default function IdentityPicker({ onDone, onCancel, reason }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const grades = useMemo(
-    () => [...new Set(roster.map((r) => r.grade))].sort((a, b) => a - b),
-    [roster]
-  )
+  // select의 값은 항상 문자열이고 roster의 학년·반은 숫자일 수도 한글일 수도 있어서
+  // (유치원은 '유치원'/'햇살반') 양쪽을 문자열로 맞춰 비교한다.
+  const grades = useMemo(() => [...new Set(roster.map((r) => r.grade))].sort(compareGrade), [roster])
   const classes = useMemo(
     () =>
-      [...new Set(roster.filter((r) => r.grade === Number(grade)).map((r) => r.class))].sort(
-        (a, b) => a - b
+      [...new Set(roster.filter((r) => String(r.grade) === grade).map((r) => r.class))].sort(
+        compareGrade
       ),
     [roster, grade]
   )
   const students = useMemo(
     () =>
       roster
-        .filter((r) => r.grade === Number(grade) && r.class === Number(klass))
+        .filter((r) => String(r.grade) === grade && String(r.class) === klass)
         .sort((a, b) => a.number - b.number),
     [roster, grade, klass]
   )
@@ -89,7 +89,7 @@ export default function IdentityPicker({ onDone, onCancel, reason }) {
                 <option value="">선택</option>
                 {grades.map((g) => (
                   <option key={g} value={g}>
-                    {g}학년
+                    {gradeLabel(g)}
                   </option>
                 ))}
               </select>
@@ -108,14 +108,14 @@ export default function IdentityPicker({ onDone, onCancel, reason }) {
                 <option value="">선택</option>
                 {classes.map((c) => (
                   <option key={c} value={c}>
-                    {c}반
+                    {classLabel(c)}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="field">
-              <label>번호 / 이름</label>
+              <label>이름</label>
               <select
                 value={studentId}
                 disabled={!klass}
@@ -124,7 +124,7 @@ export default function IdentityPicker({ onDone, onCancel, reason }) {
                 <option value="">선택</option>
                 {students.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.number}번 {s.name}
+                    {rosterOptionLabel(s)}
                   </option>
                 ))}
               </select>

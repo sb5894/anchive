@@ -5,6 +5,7 @@ import { UNCATEGORIZED_ID } from '../lib/events'
 import { subscribeLocations } from '../lib/locations'
 import { createPost, MAX_VIDEO_BYTES } from '../lib/posts'
 import { ETC_ID, ETC_NAME, locationIdForSpot, regionCenter } from '../lib/campusRegions'
+import { whoLabel } from '../lib/identityLabel'
 import CampusMap from '../components/CampusMap'
 import IdentityPicker from '../components/IdentityPicker'
 import Modal from '../components/Modal'
@@ -232,10 +233,7 @@ export default function Upload() {
         {identity && (
           <p className="writing-as">
             <span>
-              <strong>
-                {identity.grade}-{identity.class} {identity.name}
-              </strong>{' '}
-              이름으로 올려요
+              <strong>{whoLabel(identity)}</strong> 이름으로 올려요
             </span>
             <button type="button" className="change-name-btn" onClick={() => setShowPicker(true)}>
               바꾸기
