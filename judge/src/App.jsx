@@ -5,7 +5,7 @@ import { ETC_ID, ETC_NAME, locationIdForSpot } from '../../src/lib/campusRegions
 import { classLabel, compareGrade, gradeLabel, whoLabel } from '../../src/lib/identityLabel'
 import PostVideo from '../../src/components/PostVideo'
 import { normalizeJudgeName, useJudge } from './useJudge'
-import { registerJudge, setPick, subscribeAllPicks, subscribeJudges } from './judgeData'
+import { deletePickDoc, mediaKeyOf, registerJudge, setPick, subscribeAllPicks, subscribeJudges } from './judgeData'
 import Viewer from './Viewer'
 
 const TABS = [
@@ -75,6 +75,9 @@ function NameScreen({ onSubmit }) {
   )
 }
 
+// 사진 한 장을 가리키는 키. 게시물 id + 게시물 안 순서(화면 표시용, 저장에는 mediaKey를 씀).
+const photoKey = (postId, index) => `${postId}#${index}`
+
 function JudgeHome({ judge, uid, onChangeName }) {
   const [posts, setPosts] = useState(null)
   const [locations, setLocations] = useState([])
@@ -85,7 +88,7 @@ function JudgeHome({ judge, uid, onChangeName }) {
   const [grade, setGrade] = useState('')
   const [status, setStatus] = useState('')
   const [q, setQ] = useState('')
-  const [viewer, setViewer] = useState(null) // { ids: 열 때의 목록, index }
+  const [viewer, setViewer] = useState(null) // { items: 열 때의 목록 [{postId, index}], at }
   const [initialIds, setInitialIds] = useState(null)
 
   useEffect(() => {
@@ -130,20 +133,45 @@ function JudgeHome({ judge, uid, onChangeName }) {
 
   const postsById = useMemo(() => new Map((posts || []).map((p) => [p.id, p])), [posts])
 
-  // postId -> [{ judge, pickedAt }]
-  const picksByPost = useMemo(() => {
+  // 저장된 후보를 "지금 게시물의 몇 번째 사진"으로 풀어 사진별로 모은다.
+  // photoKey -> { postId, index, judges: Map(judge -> { pickedAt, docIds }) }
+  // 학생이 그 사진을 게시물에서 빼면 찾을 수 없으니 목록에서 빠진다.
+  const photoPicks = useMemo(() => {
     const m = new Map()
     for (const pk of allPicks) {
-      if (!m.has(pk.postId)) m.set(pk.postId, [])
-      m.get(pk.postId).push(pk)
+      const post = postsById.get(pk.postId)
+      if (!post) continue
+      const media = post.media || []
+      const index = pk.mediaKey ? media.findIndex((md) => mediaKeyOf(md) === pk.mediaKey) : 0
+      if (index < 0 || index >= media.length) continue
+      const key = photoKey(pk.postId, index)
+      if (!m.has(key)) m.set(key, { postId: pk.postId, index, judges: new Map() })
+      const judges = m.get(key).judges
+      const prev = judges.get(pk.judge)
+      judges.set(pk.judge, {
+        pickedAt: Math.min(prev?.pickedAt ?? Infinity, pk.pickedAt),
+        docIds: [...(prev?.docIds || []), pk.docId],
+      })
     }
-    for (const list of m.values()) list.sort((a, b) => a.pickedAt - b.pickedAt)
     return m
-  }, [allPicks])
-  const myPicks = useMemo(
-    () => new Map(allPicks.filter((pk) => pk.judge === judge).map((pk) => [pk.postId, pk.pickedAt])),
-    [allPicks, judge]
-  )
+  }, [allPicks, postsById])
+
+  const pickersOf = (postId, index) => {
+    const entry = photoPicks.get(photoKey(postId, index))
+    if (!entry) return []
+    return [...entry.judges.entries()].sort((a, b) => a[1].pickedAt - b[1].pickedAt).map(([j]) => j)
+  }
+  const myPickOf = (postId, index) => photoPicks.get(photoKey(postId, index))?.judges.get(judge)
+
+  // 게시물마다 내가 고른 사진 수(전체 사진 탭 배지·필터용)
+  const myCountByPost = useMemo(() => {
+    const m = new Map()
+    for (const entry of photoPicks.values()) {
+      if (entry.judges.has(judge)) m.set(entry.postId, (m.get(entry.postId) || 0) + 1)
+    }
+    return m
+  }, [photoPicks, judge])
+  const myTotal = [...myCountByPost.values()].reduce((a, b) => a + b, 0)
 
   const grades = useMemo(
     () => [...new Set((posts || []).map((p) => p.authorInfo?.grade).filter((g) => g != null && g !== ''))].sort(compareGrade),
@@ -154,32 +182,36 @@ function JudgeHome({ judge, uid, onChangeName }) {
     [posts, locationNames]
   )
 
-  const list = useMemo(() => {
+  // 화면에 뿌릴 칸 목록. 전체 사진 탭은 게시물 단위, 내 후보·합산 탭은 사진 한 장 단위다.
+  // 각 칸: { post, index, key }
+  const items = useMemo(() => {
     if (!posts) return []
     const query = q.trim().toLowerCase()
-    let out = posts.filter((p) => {
+    const matches = (p) => {
       if (loc && (locationNames[locationIdForSpot(p.spot)] || ETC_NAME) !== loc) return false
       if (grade && String(p.authorInfo?.grade) !== grade) return false
       if (query && !`${whoLabel(p.authorInfo)} ${p.caption || ''}`.toLowerCase().includes(query)) return false
       return true
-    })
-    if (tab === 'all') {
-      if (status === 'picked') out = out.filter((p) => myPicks.has(p.id))
-      if (status === 'unpicked') out = out.filter((p) => !myPicks.has(p.id))
-    } else if (tab === 'mine') {
-      out = out.filter((p) => myPicks.has(p.id)).sort((a, b) => myPicks.get(a.id) - myPicks.get(b.id))
-    } else {
-      out = out
-        .filter((p) => picksByPost.has(p.id))
-        .sort((a, b) => picksByPost.get(b.id).length - picksByPost.get(a.id).length)
     }
-    return out
-  }, [posts, tab, loc, grade, status, q, myPicks, picksByPost, locationNames])
+    if (tab === 'all') {
+      return posts
+        .filter(matches)
+        .filter((p) => (status === 'picked' ? myCountByPost.has(p.id) : status === 'unpicked' ? !myCountByPost.has(p.id) : true))
+        .map((p) => ({ post: p, index: 0, key: p.id }))
+    }
+    const photos = [...photoPicks.values()]
+      .map((e) => ({ ...e, post: postsById.get(e.postId), key: photoKey(e.postId, e.index) }))
+      .filter((e) => matches(e.post))
+    if (tab === 'mine') {
+      return photos.filter((e) => e.judges.has(judge)).sort((a, b) => a.judges.get(judge).pickedAt - b.judges.get(judge).pickedAt)
+    }
+    return photos.sort((a, b) => b.judges.size - a.judges.size || a.post.createdAt?.toMillis?.() - b.post.createdAt?.toMillis?.())
+  }, [posts, postsById, tab, loc, grade, status, q, photoPicks, myCountByPost, judge, locationNames])
 
   // --- 뷰어: 열 때 목록을 고정해 둔다(내 후보 탭에서 후보를 빼도 목록이 흔들리지 않게).
   // 휴대폰 뒤로가기로 닫을 수 있게 열 때 history에 한 칸을 넣는다.
-  function openViewer(index) {
-    setViewer({ ids: list.map((p) => p.id), index })
+  function openViewer(at) {
+    setViewer({ items: items.map((it) => ({ postId: it.post.id, index: it.index })), at })
     history.pushState({ judgeViewer: true }, '')
   }
   function closeViewer() {
@@ -192,36 +224,44 @@ function JudgeHome({ judge, uid, onChangeName }) {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
   function moveViewer(delta) {
-    setViewer((v) => {
-      if (!v) return v
-      const index = Math.min(v.ids.length - 1, Math.max(0, v.index + delta))
-      return { ...v, index }
-    })
+    setViewer((v) => (v ? { ...v, at: Math.min(v.items.length - 1, Math.max(0, v.at + delta)) } : v))
   }
 
-  const viewerPost = viewer ? postsById.get(viewer.ids[viewer.index]) : null
+  const viewerItem = viewer ? viewer.items[viewer.at] : null
+  const viewerPost = viewerItem ? postsById.get(viewerItem.postId) : null
   useEffect(() => {
-    // 다음 게시물 첫 사진을 미리 받아 넘길 때 기다림을 줄인다.
+    // 다음 칸 사진을 미리 받아 넘길 때 기다림을 줄인다.
     if (!viewer) return
-    const next = postsById.get(viewer.ids[viewer.index + 1])?.media?.[0]
-    if (next?.type !== 'video' && next?.url) new Image().src = next.url
+    const next = viewer.items[viewer.at + 1]
+    const media = next && postsById.get(next.postId)?.media?.[next.index]
+    if (media?.type !== 'video' && media?.url) new Image().src = media.url
   }, [viewer, postsById])
 
-  function togglePick(postId) {
-    const picked = myPicks.has(postId)
-    setPick(judge, postId, !picked, uid).catch((err) => {
+  function togglePick(post, index) {
+    const mine = myPickOf(post.id, index)
+    const media = post.media?.[index]
+    if (!media) return
+    const fail = (err) => {
       console.error(err)
       setError(err.code === 'permission-denied' ? '후보를 저장할 권한이 없어요. (Firestore 규칙이 아직 배포되지 않았어요)' : '후보 저장에 실패했어요. 인터넷 연결을 확인해 주세요.')
-    })
+    }
+    if (mine) {
+      // 예전 형식 문서까지 같은 사진으로 묶여 있을 수 있으니 전부 지운다.
+      Promise.all(mine.docIds.map((id) => deletePickDoc(judge, id))).catch(fail)
+    } else {
+      setPick(judge, post.id, mediaKeyOf(media), true, uid).catch(fail)
+    }
   }
 
   function exportCsv() {
     const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
-    const rows = [['순위', '후보 수', '고른 선생님', '학년', '반', '이름', '장소', '캡션', '좋아요', '사진 수', '게시물 주소']]
-    list.forEach((p, i) => {
-      const pickers = (picksByPost.get(p.id) || []).map((pk) => pk.judge)
+    const rows = [['순위', '후보 수', '고른 선생님', '학년', '반', '이름', '장소', '사진 번호', '캡션', '좋아요', '게시물 주소', '사진 주소']]
+    items.forEach((it, i) => {
+      const p = it.post
+      const pickers = pickersOf(p.id, it.index)
       const a = p.authorInfo || {}
-      rows.push([i + 1, pickers.length, pickers.join(', '), gradeLabel(a.grade), classLabel(a.class), a.name, locationOf(p), p.caption, p.likeCount || 0, (p.media || []).length, `https://anchive.web.app/post/${p.id}`])
+      const len = (p.media || []).length
+      rows.push([i + 1, pickers.length, pickers.join(', '), gradeLabel(a.grade), classLabel(a.class), a.name, locationOf(p), len > 1 ? `${it.index + 1}/${len}` : '', p.caption, p.likeCount || 0, `https://anchive.web.app/post/${p.id}`, p.media?.[it.index]?.url || ''])
     })
     const blob = new Blob(['﻿' + rows.map((r) => r.map(cell).join(',')).join('\r\n')], { type: 'text/csv' })
     const a = document.createElement('a')
@@ -232,7 +272,7 @@ function JudgeHome({ judge, uid, onChangeName }) {
   }
 
   const newCount = posts && initialIds ? posts.filter((p) => !initialIds.has(p.id)).length : 0
-  const judgeCount = new Set(allPicks.map((pk) => pk.judge)).size
+  const judgeCount = new Set([...photoPicks.values()].flatMap((e) => [...e.judges.keys()])).size
 
   return (
     <div className="app">
@@ -248,7 +288,7 @@ function JudgeHome({ judge, uid, onChangeName }) {
             <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)} aria-current={tab === t.id ? 'page' : undefined}>
               <span className="tab-icon" aria-hidden="true">{t.icon}</span>
               <span>{t.label}</span>
-              {t.id === 'mine' && myPicks.size > 0 && <span className="tab-count">{myPicks.size}</span>}
+              {t.id === 'mine' && myTotal > 0 && <span className="tab-count">{myTotal}</span>}
             </button>
           ))}
         </nav>
@@ -284,12 +324,12 @@ function JudgeHome({ judge, uid, onChangeName }) {
         {tab === 'all' && (
           <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="후보 여부">
             <option value="">후보 여부 전체</option>
-            <option value="unpicked">아직 안 고른 것</option>
-            <option value="picked">내가 고른 것</option>
+            <option value="unpicked">아직 안 고른 게시물</option>
+            <option value="picked">후보가 있는 게시물</option>
           </select>
         )}
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름·캡션 검색" aria-label="검색" />
-        {tab === 'total' && list.length > 0 && (
+        {tab === 'total' && items.length > 0 && (
           <button className="ghost" onClick={exportCsv}>
             CSV 받기
           </button>
@@ -298,35 +338,39 @@ function JudgeHome({ judge, uid, onChangeName }) {
 
       {tab === 'total' && (
         <p className="tab-note muted">
-          선생님 {judgeCount}명이 고른 후보 {list.length}개 · 많이 고른 순
+          선생님 {judgeCount}명이 고른 사진 {items.length}장 · 많이 고른 순
         </p>
       )}
-      {tab === 'mine' && list.length > 0 && <p className="tab-note muted">내가 고른 순서대로 보여요</p>}
+      {tab === 'mine' && items.length > 0 && <p className="tab-note muted">내가 고른 사진 {items.length}장 · 고른 순서대로</p>}
 
       {!posts ? (
         <div className="center-page">불러오는 중…</div>
-      ) : list.length === 0 ? (
+      ) : items.length === 0 ? (
         <div className="empty">
           {tab === 'mine' ? '아직 고른 후보가 없어요. 사진을 열어 ☆ 버튼을 눌러 보세요.' : tab === 'total' ? '아직 아무도 후보를 고르지 않았어요.' : '조건에 맞는 사진이 없어요.'}
         </div>
       ) : (
         <main className="grid">
-          {list.map((p, i) => {
-            const first = p.media?.[0]
-            const pickers = picksByPost.get(p.id) || []
+          {items.map((it, i) => {
+            const p = it.post
+            const media = p.media?.[it.index]
+            const len = p.media?.length || 0
             const isNew = initialIds && !initialIds.has(p.id)
+            const myCount = myCountByPost.get(p.id) || 0
+            const picked = tab === 'all' ? myCount > 0 : !!myPickOf(p.id, it.index)
+            const pickers = tab === 'total' ? pickersOf(p.id, it.index) : []
             return (
-              <button key={p.id} className={`card ${myPicks.has(p.id) ? 'picked' : ''}`} onClick={() => openViewer(i)}>
+              <button key={it.key} className={`card ${picked ? 'picked' : ''}`} onClick={() => openViewer(i)}>
                 <div className="thumb">
-                  {first?.type === 'video' ? <PostVideo media={first} mode="thumb" className="thumb-media" /> : first ? <img className="thumb-media" src={first.url} alt="" loading="lazy" /> : null}
-                  {myPicks.has(p.id) && <span className="badge star">⭐</span>}
+                  {media?.type === 'video' ? <PostVideo media={media} mode="thumb" className="thumb-media" /> : media ? <img className="thumb-media" src={media.url} alt="" loading="lazy" /> : null}
+                  {picked && <span className="badge star">⭐{tab === 'all' && len > 1 ? ` ${myCount}` : ''}</span>}
                   {isNew && <span className="badge new">NEW</span>}
-                  {p.media?.length > 1 && <span className="badge count">{p.media.length}</span>}
+                  {len > 1 && <span className="badge count">{tab === 'all' ? len : `${it.index + 1}/${len}`}</span>}
                   {tab === 'total' && <span className="badge votes">{pickers.length}명</span>}
                 </div>
                 <div className="card-meta">
                   <span className="card-author">{whoLabel(p.authorInfo)}</span>
-                  <span className="card-sub">{tab === 'total' ? pickers.map((pk) => pk.judge).join(', ') : locationOf(p)}</span>
+                  <span className="card-sub">{tab === 'total' ? pickers.join(', ') : locationOf(p)}</span>
                 </div>
               </button>
             )
@@ -336,15 +380,16 @@ function JudgeHome({ judge, uid, onChangeName }) {
 
       {viewer && viewerPost && (
         <Viewer
-          key={viewerPost.id}
+          key={`${viewerItem.postId}#${viewerItem.index}#${viewer.at}`}
           post={viewerPost}
-          position={viewer.index + 1}
-          total={viewer.ids.length}
+          startIndex={viewerItem.index}
+          position={viewer.at + 1}
+          total={viewer.items.length}
           locationName={locationOf(viewerPost)}
-          picked={myPicks.has(viewerPost.id)}
+          isPicked={(index) => !!myPickOf(viewerPost.id, index)}
           // 서로 영향받지 않게, 다른 선생님이 고른 내역은 합산 탭에서만 보여준다.
-          pickers={tab === 'total' ? (picksByPost.get(viewerPost.id) || []).map((pk) => pk.judge) : []}
-          onTogglePick={() => togglePick(viewerPost.id)}
+          pickersOf={(index) => (tab === 'total' ? pickersOf(viewerPost.id, index) : [])}
+          onTogglePick={(index) => togglePick(viewerPost, index)}
           onPrev={() => moveViewer(-1)}
           onNext={() => moveViewer(1)}
           onClose={closeViewer}

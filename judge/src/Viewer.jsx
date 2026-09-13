@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import PostVideo from '../../src/components/PostVideo'
 import { whoLabel } from '../../src/lib/identityLabel'
 
@@ -6,16 +6,27 @@ import { whoLabel } from '../../src/lib/identityLabel'
 // 이동: PC는 ←→(게시물)·↑↓(같은 게시물의 사진), 폰은 좌우 스와이프.
 // 여러 장짜리 게시물은 사진 영역이 가로 스크롤 캐러셀이라, 스와이프가 먼저 사진을 넘기고
 // 첫/마지막 사진에서 더 밀었을 때만 게시물을 넘긴다.
-// 부모가 게시물 id를 key로 주므로, 게시물이 바뀌면 새로 마운트되어 첫 사진부터 보인다.
-export default function Viewer({ post, position, total, locationName, picked, pickers, onTogglePick, onPrev, onNext, onClose }) {
+// 부모가 칸마다 다른 key를 주므로, 다른 칸으로 넘어가면 새로 마운트되어 startIndex 사진부터 보인다.
+// 수상 후보는 게시물이 아니라 지금 보고 있는 사진 한 장에 매긴다.
+export default function Viewer({ post, startIndex = 0, position, total, locationName, isPicked, pickersOf, onTogglePick, onPrev, onNext, onClose }) {
   const trackRef = useRef(null)
   const touchRef = useRef(null)
-  const [mediaIndex, setMediaIndex] = useState(0)
+  const [mediaIndex, setMediaIndex] = useState(startIndex)
   const media = post.media || []
+  const picked = isPicked(mediaIndex)
+  const pickers = pickersOf(mediaIndex)
+
+  // 내 후보·합산 탭에서 2번째 사진을 열면 캐러셀도 그 사진에서 시작해야 한다.
+  useLayoutEffect(() => {
+    const track = trackRef.current
+    if (track && startIndex > 0) track.scrollLeft = startIndex * track.clientWidth
+  }, [startIndex])
 
   function goMedia(i) {
     const track = trackRef.current
     if (!track || i < 0 || i >= media.length) return
+    // 후보 버튼이 가리키는 사진이 스크롤 애니메이션 끝을 기다리지 않게 바로 바꿔 둔다.
+    setMediaIndex(i)
     track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' })
   }
 
@@ -26,7 +37,7 @@ export default function Viewer({ post, position, total, locationName, picked, pi
       else if (e.key === 'ArrowLeft') onPrev()
       else if (e.key === 'ArrowDown') goMedia(mediaIndex + 1)
       else if (e.key === 'ArrowUp') goMedia(mediaIndex - 1)
-      else if (e.key === 's' || e.key === 'S' || e.key === 'ㄴ') onTogglePick()
+      else if (e.key === 's' || e.key === 'S' || e.key === 'ㄴ') onTogglePick(mediaIndex)
       else if (e.key === 'Escape') onClose()
       else return
       e.preventDefault()
@@ -83,7 +94,7 @@ export default function Viewer({ post, position, total, locationName, picked, pi
         {media.length > 1 && (
           <div className="viewer-dots" aria-label={`${media.length}장 중 ${mediaIndex + 1}번째`}>
             {media.map((m, i) => (
-              <button key={m.url || i} className={i === mediaIndex ? 'on' : ''} onClick={() => goMedia(i)} aria-label={`${i + 1}번째 사진`} />
+              <button key={m.url || i} className={`${i === mediaIndex ? 'on' : ''} ${isPicked(i) ? 'picked' : ''}`} onClick={() => goMedia(i)} aria-label={`${i + 1}번째 사진${isPicked(i) ? ' (후보)' : ''}`} />
             ))}
           </div>
         )}
@@ -107,11 +118,16 @@ export default function Viewer({ post, position, total, locationName, picked, pi
         {post.caption && <p className="viewer-caption">{post.caption}</p>}
         {pickers.length > 0 && (
           <p className="viewer-pickers">
-            후보로 고른 선생님 {pickers.length}명: {pickers.join(', ')}
+            {media.length > 1 ? `이 사진을 ` : ''}후보로 고른 선생님 {pickers.length}명: {pickers.join(', ')}
           </p>
         )}
-        <button className={`pick-btn ${picked ? 'on' : ''}`} onClick={onTogglePick} aria-pressed={picked}>
-          {picked ? '⭐ 수상 후보로 골랐어요' : '☆ 수상 후보로 고르기'}
+        {media.length > 1 && (
+          <p className="viewer-photo-note">
+            {media.length}장 중 <b>{mediaIndex + 1}번째 사진</b> · 이 게시물에서 후보 {media.filter((_, i) => isPicked(i)).length}장
+          </p>
+        )}
+        <button className={`pick-btn ${picked ? 'on' : ''}`} onClick={() => onTogglePick(mediaIndex)} aria-pressed={picked}>
+          {picked ? `⭐ ${media.length > 1 ? '이 사진을 ' : ''}수상 후보로 골랐어요` : `☆ ${media.length > 1 ? '이 사진을 ' : ''}수상 후보로 고르기`}
         </button>
         <p className="viewer-keys">
           <kbd>←</kbd> <kbd>→</kbd> 게시물 · <kbd>↑</kbd> <kbd>↓</kbd> 사진 · <kbd>S</kbd> 후보 · <kbd>Esc</kbd> 닫기
