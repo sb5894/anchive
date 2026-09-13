@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ANchive 사진 심사</title>
+<style>
+  :root { --bg:#111; --panel:#1c1c1e; --line:#333; --text:#eee; --muted:#999; --accent:#ffcc00; --pick:#ff5a7a; }
+  * { box-sizing: border-box; }
+  /* .modal{display:grid}가 hidden 속성을 이겨서 닫기가 안 되던 문제 방지 */
+  [hidden] { display: none !important; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, "Malgun Gothic", sans-serif; }
+  header { position:sticky; top:0; z-index:5; background:var(--panel); border-bottom:1px solid var(--line);
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 14px; }
+  header h1 { font-size:16px; margin:0 12px 0 0; }
+  select, input, button, textarea { background:#2a2a2d; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 8px; font:inherit; }
+  button { cursor:pointer; }
+  button:hover { border-color:#666; }
+  .progress { margin-left:auto; color:var(--muted); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px; padding:14px; }
+  .card { position:relative; background:var(--panel); border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid transparent; }
+  .card:hover { border-color:#555; }
+  .card.pick { border-color:var(--pick); }
+  .thumb { width:100%; aspect-ratio:1; object-fit:cover; display:block; background:#000; }
+  .meta { padding:6px 8px; font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta b { color:var(--text); font-weight:600; }
+  .badge { position:absolute; top:6px; right:6px; background:rgba(0,0,0,.75); color:var(--accent); border-radius:12px; padding:2px 8px; font-weight:700; }
+  .count { position:absolute; top:6px; left:6px; background:rgba(0,0,0,.75); border-radius:12px; padding:2px 8px; font-size:12px; }
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.94); z-index:10; display:grid; grid-template-columns:1fr 320px; }
+  .stage { position:relative; display:flex; align-items:center; justify-content:center; min-height:0; }
+  .stage img, .stage video { max-width:100%; max-height:100vh; object-fit:contain; }
+  .nav { position:absolute; top:50%; transform:translateY(-50%); font-size:28px; background:rgba(0,0,0,.5); border:none; padding:14px 10px; }
+  .nav.prev { left:8px } .nav.next { right:8px }
+  .dots { position:absolute; bottom:12px; left:0; right:0; text-align:center; color:var(--muted); }
+  .side { background:var(--panel); padding:16px; overflow:auto; display:flex; flex-direction:column; gap:12px; }
+  .side h2 { margin:0; font-size:18px; }
+  .row { color:var(--muted); }
+  .caption { white-space:pre-wrap; background:#252528; padding:8px; border-radius:6px; }
+  .stars { display:flex; gap:6px; }
+  .stars button { flex:1; font-size:18px; padding:8px 0; }
+  .stars button.on { background:var(--accent); color:#000; border-color:var(--accent); }
+  .pickbtn.on { background:var(--pick); border-color:var(--pick); color:#fff; }
+  textarea { width:100%; min-height:90px; resize:vertical; }
+  .keys { font-size:12px; color:var(--muted); border-top:1px solid var(--line); padding-top:10px; }
+  kbd { background:#333; border-radius:3px; padding:0 4px; }
+  @media (max-width:800px) { .modal { grid-template-columns:1fr; grid-template-rows:60vh auto; } .stage img, .stage video { max-height:60vh; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>📸 사진 심사</h1>
+  <select id="fLoc"><option value="">전체 장소</option></select>
+  <select id="fEvent"><option value="">전체 행사</option></select>
+  <select id="fGrade"><option value="">전체 학년</option></select>
+  <select id="fStatus">
+    <option value="">전체</option><option value="todo">미채점</option>
+    <option value="done">채점함</option><option value="pick">⭐ 후보만</option>
+  </select>
+  <select id="sort">
+    <option value="time">올린 순</option><option value="score">점수 높은 순</option><option value="likes">좋아요 많은 순</option>
+  </select>
+  <input id="q" placeholder="이름·캡션 검색" size="12">
+  <button id="exportCsv">결과 CSV</button>
+  <button id="exportJson">백업</button>
+  <button id="importJson">불러오기</button>
+  <span class="progress" id="progress"></span>
+</header>
+<main class="grid" id="grid"></main>
+
+<div class="modal" id="modal" hidden>
+  <div class="stage" id="stage">
+    <button class="nav prev" id="prevPost" title="이전 게시물 (←)">‹</button>
+    <div id="mediaBox"></div>
+    <button class="nav next" id="nextPost" title="다음 게시물 (→)">›</button>
+    <div class="dots" id="dots"></div>
+  </div>
+  <aside class="side">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 id="mAuthor"></h2><button id="close">닫기 ✕</button>
+    </div>
+    <div class="row" id="mInfo"></div>
+    <div class="caption" id="mCaption"></div>
+    <div>점수</div>
+    <div class="stars" id="stars"></div>
+    <button class="pickbtn" id="pick">⭐ 수상 후보</button>
+    <div>메모</div>
+    <textarea id="memo" placeholder="심사 메모 (자동 저장)"></textarea>
+    <div class="row" id="mPos"></div>
+    <div class="keys">
+      <kbd>←</kbd><kbd>→</kbd> 게시물 이동 · <kbd>↑</kbd><kbd>↓</kbd> 같은 게시물 안 사진 이동<br>
+      <kbd>1</kbd>~<kbd>5</kbd> 점수 · <kbd>0</kbd> 점수 지우기 · <kbd>S</kbd> 후보 · <kbd>Esc</kbd> 닫기
+    </div>
+  </aside>
+</div>
+
+<script>
+const POSTS = /*__POSTS__*/[];
+const KEY = 'anchive-review-v1';
+let reviews = {};
+try { reviews = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(reviews)); } catch {} };
+const rv = (id) => reviews[id] || (reviews[id] = { score: 0, pick: false, memo: '' });
+
+const $ = (id) => document.getElementById(id);
+const uniq = (arr) => [...new Set(arr.filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'ko', { numeric: true }));
+function fillSelect(el, values, fmt = (v) => v) {
+  for (const v of values) el.add(new Option(fmt(v), v));
+}
+fillSelect($('fLoc'), uniq(POSTS.map((p) => p.location)));
+fillSelect($('fEvent'), uniq(POSTS.map((p) => p.event)));
+fillSelect($('fGrade'), uniq(POSTS.map((p) => String(p.grade))), (v) => v + '학년');
+
+let view = [];
+let cur = -1, curMedia = 0;
+
+function applyFilters() {
+  const loc = $('fLoc').value, ev = $('fEvent').value, gr = $('fGrade').value, st = $('fStatus').value;
+  const q = $('q').value.trim().toLowerCase();
+  view = POSTS.filter((p) => {
+    const r = reviews[p.id];
+    if (loc && p.location !== loc) return false;
+    if (ev && p.event !== ev) return false;
+    if (gr && String(p.grade) !== gr) return false;
+    if (st === 'todo' && r?.score) return false;
+    if (st === 'done' && !r?.score) return false;
+    if (st === 'pick' && !r?.pick) return false;
+    if (q && !(p.author + ' ' + p.caption).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const s = $('sort').value;
+  if (s === 'score') view.sort((a, b) => (reviews[b.id]?.score || 0) - (reviews[a.id]?.score || 0));
+  if (s === 'likes') view.sort((a, b) => b.likes - a.likes);
+  renderGrid();
+}
+
+function thumbHtml(m) {
+  return m.type === 'video'
+    ? `<video class="thumb" src="${m.file}#t=0.5" preload="metadata" muted></video>`
+    : `<img class="thumb" src="${m.file}" loading="lazy" alt="">`;
+}
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function renderGrid() {
+  $('grid').innerHTML = view.map((p, i) => {
+    const r = reviews[p.id];
+    return `<div class="card ${r?.pick ? 'pick' : ''}" data-i="${i}">
+      ${p.media[0] ? thumbHtml(p.media[0]) : '<div class="thumb"></div>'}
+      ${p.media.length > 1 ? `<span class="count">${p.media.length}장</span>` : ''}
+      ${r?.score ? `<span class="badge">${'★'.repeat(r.score)}</span>` : ''}
+      <div class="meta"><b>${esc(p.author)}</b> · ${esc(p.location)}</div>
+    </div>`;
+  }).join('');
+  updateProgress();
+}
+
+function updateProgress() {
+  const scored = POSTS.filter((p) => reviews[p.id]?.score).length;
+  const picks = POSTS.filter((p) => reviews[p.id]?.pick).length;
+  $('progress').textContent = `표시 ${view.length} · 채점 ${scored}/${POSTS.length} · 후보 ${picks}`;
+}
+
+function open(i, mediaIdx = 0) {
+  if (i < 0 || i >= view.length) return;
+  cur = i; curMedia = mediaIdx;
+  $('modal').hidden = false;
+  renderModal();
+}
+function close() {
+  $('modal').hidden = true;
+  $('mediaBox').innerHTML = '';
+  cur = -1;
+  renderGrid();
+}
+
+function renderModal() {
+  const p = view[cur], r = rv(p.id);
+  const m = p.media[curMedia];
+  $('mediaBox').innerHTML = !m ? '(파일 없음)' : m.type === 'video'
+    ? `<video src="${m.file}" controls autoplay></video>`
+    : `<img src="${m.file}" alt="">`;
+  $('dots').textContent = p.media.length > 1 ? `${curMedia + 1} / ${p.media.length}  (↑↓로 넘기기)` : '';
+  $('mAuthor').textContent = p.author;
+  $('mInfo').textContent = `${p.location} · ${p.event} · ♥ ${p.likes} · ${p.createdAt ? new Date(p.createdAt).toLocaleString('ko-KR') : ''}`;
+  $('mCaption').textContent = p.caption || '(캡션 없음)';
+  $('mCaption').hidden = false;
+  $('stars').innerHTML = [1, 2, 3, 4, 5].map((n) => `<button data-n="${n}" class="${r.score >= n ? 'on' : ''}">${n}</button>`).join('');
+  $('pick').classList.toggle('on', r.pick);
+  $('memo').value = r.memo;
+  $('mPos').textContent = `${cur + 1} / ${view.length}번째`;
+  // 다음 게시물 첫 사진을 미리 받아 두면 넘길 때 깜빡임이 줄어든다.
+  const next = view[cur + 1]?.media[0];
+  if (next?.type === 'image') new Image().src = next.file;
+}
+
+function setScore(n) {
+  const r = rv(view[cur].id);
+  r.score = r.score === n ? 0 : n;
+  save(); renderModal(); updateProgress();
+}
+function togglePick() {
+  const r = rv(view[cur].id);
+  r.pick = !r.pick;
+  save(); renderModal(); updateProgress();
+}
+
+$('grid').addEventListener('click', (e) => {
+  const card = e.target.closest('.card');
+  if (card) open(+card.dataset.i);
+});
+$('stars').addEventListener('click', (e) => { if (e.target.dataset.n) setScore(+e.target.dataset.n); });
+$('pick').onclick = togglePick;
+$('close').onclick = close;
+$('prevPost').onclick = () => open(cur - 1);
+$('nextPost').onclick = () => open(cur + 1);
+$('memo').addEventListener('input', (e) => { rv(view[cur].id).memo = e.target.value; save(); });
+for (const id of ['fLoc', 'fEvent', 'fGrade', 'fStatus', 'sort']) $(id).onchange = applyFilters;
+$('q').oninput = applyFilters;
+
+document.addEventListener('keydown', (e) => {
+  if ($('modal').hidden || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+    if (e.key === 'Escape' && e.target.tagName === 'TEXTAREA') e.target.blur();
+    return;
+  }
+  const p = view[cur];
+  if (e.key === 'ArrowRight') open(cur + 1);
+  else if (e.key === 'ArrowLeft') open(cur - 1);
+  else if (e.key === 'ArrowDown' && curMedia < p.media.length - 1) { curMedia++; renderModal(); }
+  else if (e.key === 'ArrowUp' && curMedia > 0) { curMedia--; renderModal(); }
+  else if (e.key >= '1' && e.key <= '5') setScore(+e.key);
+  else if (e.key === '0') { rv(p.id).score = 0; save(); renderModal(); updateProgress(); }
+  else if (e.key.toLowerCase() === 's' || e.key === 'ㄴ') togglePick();
+  else if (e.key === 'Escape') close();
+  else return;
+  e.preventDefault();
+});
+
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('exportCsv').onclick = () => {
+  const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = [['점수', '후보', '학년', '반', '이름', '장소', '행사', '좋아요', '캡션', '메모', '파일', '게시물ID']];
+  const sorted = [...POSTS].sort((a, b) => (reviews[b.id]?.score || 0) - (reviews[a.id]?.score || 0));
+  for (const p of sorted) {
+    const r = reviews[p.id] || {};
+    rows.push([r.score || '', r.pick ? 'O' : '', p.grade, p.klass, p.name, p.location, p.event, p.likes,
+      p.caption, r.memo || '', p.media.map((m) => m.file).join(' '), p.id]);
+  }
+  // BOM을 붙여야 엑셀에서 한글이 안 깨진다.
+  download('심사결과.csv', '﻿' + rows.map((r) => r.map(cell).join(',')).join('\r\n'), 'text/csv');
+};
+$('exportJson').onclick = () => download('심사백업.json', JSON.stringify(reviews, null, 1), 'application/json');
+$('importJson').onclick = () => {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.onchange = async () => {
+    try {
+      reviews = { ...reviews, ...JSON.parse(await inp.files[0].text()) };
+      save(); applyFilters();
+    } catch { alert('백업 파일을 읽지 못했어요.'); }
+  };
+  inp.click();
+};
+
+applyFilters();
+</script>
+</body>
+</html>

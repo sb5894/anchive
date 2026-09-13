@@ -31,3 +31,6 @@ scripts/roster.csv
 *.sln
 *.sw?
 .firebase/
+
+# 심사용으로 내려받은 사진·학생 이름 (scripts/exportForReview.mjs)
+review/
