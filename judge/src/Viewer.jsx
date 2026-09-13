@@ -9,8 +9,15 @@ import { whoLabel } from '../../src/lib/identityLabel'
 // 부모가 칸마다 다른 key를 주므로, 다른 칸으로 넘어가면 새로 마운트되어 startIndex 사진부터 보인다.
 // 수상 후보는 게시물이 아니라 지금 보고 있는 사진 한 장에 매긴다.
 export default function Viewer({ post, startIndex = 0, position, total, locationName, isPicked, pickersOf, onTogglePick, onPrev, onNext, onClose }) {
+  const rootRef = useRef(null)
   const trackRef = useRef(null)
   const touchRef = useRef(null)
+
+  // 포커스를 뷰어 안으로 옮긴다. 뒤쪽 카드에 포커스가 남아 있으면 Enter가 그 카드를 다시 눌러
+  // 방향키로 넘겨 둔 위치가 처음 연 게시물로 되돌아간다.
+  useEffect(() => {
+    rootRef.current?.focus({ preventScroll: true })
+  }, [])
   const [mediaIndex, setMediaIndex] = useState(startIndex)
   const media = post.media || []
   const picked = isPicked(mediaIndex)
@@ -70,7 +77,7 @@ export default function Viewer({ post, startIndex = 0, position, total, location
   }
 
   return (
-    <div className="viewer" role="dialog" aria-modal="true" aria-label={`${whoLabel(post.authorInfo)}님의 게시물`}>
+    <div className="viewer" ref={rootRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${whoLabel(post.authorInfo)}님의 게시물`}>
       <div className="viewer-stage" onClick={(e) => e.target === e.currentTarget && onClose()}>
         <div className="viewer-track" ref={trackRef} onScroll={onScroll} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           {media.map((m, i) => (

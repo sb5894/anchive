@@ -219,10 +219,24 @@ function JudgeHome({ judge, uid, onChangeName }) {
     else setViewer(null)
   }
   useEffect(() => {
+    // 뷰어를 연 채 새로고침하면 history에 뷰어 표시가 남는다. 그대로 두면 닫을 때 뒤로가기가 한 칸 더 필요해진다.
+    if (history.state?.judgeViewer) history.replaceState(null, '')
     const onPop = () => setViewer(null)
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
+
+  // 뷰어가 열려 있는 동안 뒤쪽 목록이 스크롤되지 않게 막는다(닫았을 때 보던 위치 유지).
+  const viewerOpen = !!viewer
+  useEffect(() => {
+    if (!viewerOpen) return
+    const root = document.documentElement
+    const prev = root.style.overflow
+    root.style.overflow = 'hidden'
+    return () => {
+      root.style.overflow = prev
+    }
+  }, [viewerOpen])
   function moveViewer(delta) {
     setViewer((v) => (v ? { ...v, at: Math.min(v.items.length - 1, Math.max(0, v.at + delta)) } : v))
   }

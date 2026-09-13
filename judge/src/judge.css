@@ -56,7 +56,8 @@ kbd { background: #ececea; border-radius: 4px; padding: 0 5px; font-size: 12px; 
 }
 .tabs button.on { background: #ededfb; color: var(--accent); }
 .tab-count { background: var(--star); color: #fff; border-radius: 999px; font-size: 12px; padding: 0 7px; line-height: 18px; }
-.whoami { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 12px; white-space: nowrap; min-height: 40px; }
+.whoami { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 12px; white-space: nowrap; min-height: 40px; max-width: 45vw; overflow: hidden; text-overflow: ellipsis; }
+.viewer:focus { outline: none; }
 
 .banner {
   margin: 10px 16px 0; background: #fdecea; color: var(--danger); border-radius: 10px; padding: 10px 12px;
