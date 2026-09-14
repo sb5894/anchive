@@ -5,8 +5,8 @@ import { db } from '../firebase'
 // 늦어져도 실질적 문제가 없다고 판단해 무기한 캐시한다(TTL·무효화 없음).
 let cache = null
 
-export async function loadRoster() {
-  if (cache) return cache
+export async function loadRoster({ refresh = false } = {}) {
+  if (cache && !refresh) return cache
   const snap = await getDocs(collection(db, 'roster'))
   cache = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
   return cache

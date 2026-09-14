@@ -102,14 +102,32 @@ if (problems.length > 0) {
 }
 
 const existing = await rosterRef.get()
+const existingEntries = existing.docs.map((d) => d.data())
+// 재업로드해도 승인된 번호 정정 이력을 유지한다. 이름만으로 연결하지 않는다.
+for (const entry of entries) {
+  const reverted = existingEntries.find((old) =>
+    old.grade === entry.grade && old.class === entry.class && old.name === entry.name &&
+    old.number !== entry.number && old.previousNumbers?.includes(entry.number)
+  )
+  if (reverted) {
+    throw new Error(`${entry.line}행: 이미 정정된 번호입니다. ${entry.number}번을 ${reverted.number}번으로 고쳐 주세요. 명단은 변경하지 않았습니다.`)
+  }
+  const matches = existingEntries.filter((old) =>
+    old.grade === entry.grade && old.class === entry.class && old.name === entry.name &&
+    old.number === entry.number
+  )
+  if (matches.length === 1 && matches[0].previousNumbers?.length) {
+    entry.previousNumbers = matches[0].previousNumbers
+  }
+}
 await commitInChunks(existing.docs.map((d) => (batch) => batch.delete(d.ref)))
 console.log(`기존 roster ${existing.size}명 삭제 완료`)
 
 await commitInChunks(
   entries.map(
-    ({ id, grade, class: klass, number, name }) =>
+    ({ id, grade, class: klass, number, name, previousNumbers }) =>
       (batch) =>
-        batch.set(rosterRef.doc(id), { grade, class: klass, number, name })
+        batch.set(rosterRef.doc(id), { grade, class: klass, number, name, ...(previousNumbers ? { previousNumbers } : {}) })
   )
 )
 console.log(`roster 컬렉션에 ${entries.length}명 업로드 완료`)

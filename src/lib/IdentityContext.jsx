@@ -1,23 +1,12 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { onAuthStateChanged, signInAnonymously, signOut } from 'firebase/auth'
 import { auth } from '../firebase'
+import { loadRoster } from './roster'
+import { normalizeIdentity, sameStudent } from './identityMigration'
 
 const STORAGE_KEY = 'anchive_identity'
 
 const IdentityContext = createContext(null)
-
-// 같은 학생이 이름을 다시 골랐는지 판단한다(roster 문서 id는 저장하지 않으므로
-// IdentityPicker가 넘기는 네 필드로 비교한다).
-function sameStudent(a, b) {
-  return (
-    !!a &&
-    !!b &&
-    a.grade === b.grade &&
-    a.class === b.class &&
-    a.number === b.number &&
-    a.name === b.name
-  )
-}
 
 function loadIdentity() {
   try {
@@ -43,6 +32,19 @@ export function IdentityProvider({ children }) {
   const switchingRef = useRef(false)
 
   useEffect(() => {
+    let cancelled = false
+    loadRoster().then((roster) => {
+      if (cancelled || switchingRef.current) return
+      setIdentityState((current) => normalizeIdentity(current, roster))
+    }).catch((err) => console.error('번호 정정 정보 조회 실패', err))
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    if (identity) localStorage.setItem(STORAGE_KEY, JSON.stringify(identity))
+  }, [identity])
+
+  useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUid(user.uid)
@@ -62,7 +64,11 @@ export function IdentityProvider({ children }) {
   // 같은 학생이 자기 이름을 다시 고른 경우까지 uid를 바꾸면 방금 올린 글도 자기가 못 지우게 된다.
   // 관리자(비익명) 세션에서는 절대 uid를 유지하지 않는다 — 그대로 두면 학생이 관리자 권한을 이어받는다.
   async function switchIdentity(rosterEntry) {
-    const keepUid = sameStudent(identity, rosterEntry) && auth.currentUser?.isAnonymous === true
+    // 열린 화면의 명단이 오래됐어도 최신 정정 이력으로 양쪽을 비교한다.
+    // 조회 실패 시 계정을 교체하지 않고 호출자가 재시도를 안내한다.
+    const roster = await loadRoster({ refresh: true })
+    const nextIdentity = normalizeIdentity(rosterEntry, roster)
+    const keepUid = sameStudent(normalizeIdentity(identity, roster), nextIdentity) && auth.currentUser?.isAnonymous === true
     if (!keepUid) {
       switchingRef.current = true
       try {
@@ -74,8 +80,8 @@ export function IdentityProvider({ children }) {
         switchingRef.current = false
       }
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rosterEntry))
-    setIdentityState(rosterEntry)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextIdentity))
+    setIdentityState(nextIdentity)
   }
 
   return (
